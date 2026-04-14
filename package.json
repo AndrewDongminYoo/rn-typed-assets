@@ -1,0 +1,39 @@
+{
+  "name": "rn-typed-assets",
+  "version": "1.0.0",
+  "description": "Typed asset registry generator and auditor for React Native projects",
+  "main": "src/index.js",
+  "bin": {
+    "rn-typed-assets": "src/cli.js"
+  },
+  "files": [
+    "src/",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "react-native",
+    "assets",
+    "codegen",
+    "typescript"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "peerDependencies": {
+    "typescript": ">=4.9.0"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "typescript": "^5.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ]
+  }
+}
