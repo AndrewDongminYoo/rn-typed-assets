@@ -1,29 +1,41 @@
-import { fixupConfigRules } from '@eslint/compat';
-import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
-import prettier from 'eslint-plugin-prettier';
+import json from '@eslint/json';
+import markdown from '@eslint/markdown';
 import { defineConfig } from 'eslint/config';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all,
-});
+import prettier from 'eslint-config-prettier';
+import jest from 'eslint-plugin-jest';
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
 
 export default defineConfig([
+  js.configs.recommended,
+  prettier,
   {
-    extends: fixupConfigRules(compat.extends('@react-native', 'prettier')),
-    plugins: { prettier },
-    rules: {
-      'react/react-in-jsx-scope': 'off',
-      'prettier/prettier': 'error',
-    },
+    files: ['**/*.{js,mjs,cjs}'],
+    plugins: { js },
+    languageOptions: { globals: globals.node },
+    extends: [tseslint.configs.disableTypeChecked],
   },
   {
-    ignores: ['node_modules/', 'lib/'],
+    files: ['**/*.{ts,mts,cts}'],
+    languageOptions: { globals: globals.node },
+    extends: [tseslint.configs.recommendedTypeChecked],
+  },
+  {
+    files: ['**/*.{test.js,test.ts,test.tsx}', 'jest.setup.js'],
+    ...jest.configs['flat/recommended'],
+  },
+  {
+    files: ['**/*.json'],
+    plugins: { json },
+    language: 'json/json',
+    extends: ['json/recommended'],
+    ignores: ['package-lock.json'],
+  },
+  {
+    files: ['**/*.md'],
+    plugins: { markdown },
+    language: 'markdown/gfm',
+    extends: ['markdown/recommended'],
   },
 ]);
