@@ -19,9 +19,21 @@
     "codegen",
     "typescript"
   ],
-  "license": "MIT",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AndrewDongminYoo/rn-typed-assets.git"
+  },
+  "author": "Dongmin, Yoo <ydm2790@gmail.com> (https://github.com/AndrewDongminYoo)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/AndrewDongminYoo/rn-typed-assets/issues"
+  },
+  "homepage": "https://github.com/AndrewDongminYoo/rn-typed-assets#readme",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
   },
   "peerDependencies": {
     "typescript": ">=4.9.0"
