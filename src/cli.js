@@ -26,7 +26,7 @@ Options (audit):
   --config <path>     Path to config file (default: ./rn-typed-assets.config.js)
 `.trim();
 
-const parseRootArg = argv => {
+const parseRootArg = (argv) => {
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i].startsWith('--root=')) {
       return argv[i].slice('--root='.length);
@@ -40,7 +40,7 @@ const parseRootArg = argv => {
   return process.cwd();
 };
 
-const parseConfigArg = argv => {
+const parseConfigArg = (argv) => {
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i].startsWith('--config=')) {
       return argv[i].slice('--config='.length);
@@ -71,7 +71,9 @@ const runGenerate = (argv, projectRoot, config) => {
       config,
     });
 
-    console.log(`Generated ${entries.length} asset bindings for types: ${types.join(', ')}`);
+    console.log(
+      `Generated ${entries.length} asset bindings for types: ${types.join(', ')}`,
+    );
   } catch (error) {
     console.error(`Failed to generate assets: ${error.message}`);
     process.exit(1);
