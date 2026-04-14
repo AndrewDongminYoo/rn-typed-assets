@@ -22,7 +22,9 @@ describe('audit', () => {
       const noop = Other.toast.info;
     `;
 
-    expect(collectGeneratedAssetUsages(source, 'example.tsx', DEFAULT_CONFIG)).toEqual({
+    expect(
+      collectGeneratedAssetUsages(source, 'example.tsx', DEFAULT_CONFIG),
+    ).toEqual({
       Assets: ['toast.info'],
       Lotties: ['loading'],
       Svgs: ['logo'],
@@ -114,8 +116,10 @@ describe('audit', () => {
   });
 
   test('applyAuditFix deletes unused files and leaves used files intact', () => {
-    const projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'asset-audit-fix-'));
-    const writeFile = relativePath => {
+    const projectRoot = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'asset-audit-fix-'),
+    );
+    const writeFile = (relativePath) => {
       const absolutePath = path.join(projectRoot, relativePath);
       fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
       fs.writeFileSync(absolutePath, 'test');
@@ -149,7 +153,11 @@ describe('audit', () => {
     });
 
     expect(deletedFiles).toEqual(['src/assets/toast/warning.png']);
-    expect(fs.existsSync(path.join(projectRoot, 'src/assets/toast/info.png'))).toBe(true);
-    expect(fs.existsSync(path.join(projectRoot, 'src/assets/toast/warning.png'))).toBe(false);
+    expect(
+      fs.existsSync(path.join(projectRoot, 'src/assets/toast/info.png')),
+    ).toBe(true);
+    expect(
+      fs.existsSync(path.join(projectRoot, 'src/assets/toast/warning.png')),
+    ).toBe(false);
   });
 });

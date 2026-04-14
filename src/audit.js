@@ -3,8 +3,13 @@
 const fs = require('fs');
 const path = require('path');
 
-const { collectAssetEntries, generateAssetsManifest, getScriptKind, parseCliArgs, writeGeneratedAssets } =
-  require('./core');
+const {
+  collectAssetEntries,
+  generateAssetsManifest,
+  getScriptKind,
+  parseCliArgs,
+  writeGeneratedAssets,
+} = require('./core');
 
 let _ts = null;
 
@@ -24,7 +29,8 @@ const requireTypescript = () => {
   }
 };
 
-const sortUnique = values => [...new Set(values)].sort((left, right) => left.localeCompare(right));
+const sortUnique = (values) =>
+  [...new Set(values)].sort((left, right) => left.localeCompare(right));
 
 const parseAuditCliArgs = (argv, config) => {
   const parsed = parseCliArgs(argv, config);
@@ -36,8 +42,10 @@ const parseAuditCliArgs = (argv, config) => {
   };
 };
 
-const buildGeneratedRoots = config =>
-  Object.fromEntries(Object.entries(config.types).map(([type, tc]) => [tc.exportName, type]));
+const buildGeneratedRoots = (config) =>
+  Object.fromEntries(
+    Object.entries(config.types).map(([type, tc]) => [tc.exportName, type]),
+  );
 
 const buildSourceFile = (code, filePath) => {
   const ts = requireTypescript();
@@ -81,7 +89,10 @@ const extractPropertyChain = (node, generatedRoots) => {
     };
   }
 
-  if (ts.isElementAccessExpression(node) && ts.isStringLiteral(node.argumentExpression)) {
+  if (
+    ts.isElementAccessExpression(node) &&
+    ts.isStringLiteral(node.argumentExpression)
+  ) {
     const base = extractPropertyChain(node.expression, generatedRoots);
 
     if (!base) {
@@ -101,14 +112,21 @@ const collectGeneratedAssetUsages = (code, filePath, config) => {
   const ts = requireTypescript();
   const generatedRoots = buildGeneratedRoots(config);
   const sourceFile = buildSourceFile(code, filePath);
-  const collected = Object.fromEntries(Object.keys(generatedRoots).map(k => [k, new Set()]));
+  const collected = Object.fromEntries(
+    Object.keys(generatedRoots).map((k) => [k, new Set()]),
+  );
 
-  const visit = node => {
-    if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {
+  const visit = (node) => {
+    if (
+      ts.isPropertyAccessExpression(node) ||
+      ts.isElementAccessExpression(node)
+    ) {
       const chain = extractPropertyChain(node, generatedRoots);
       const parent = node.parent;
       const isNestedInLongerChain =
-        (ts.isPropertyAccessExpression(parent) || ts.isElementAccessExpression(parent)) && parent.expression === node;
+        (ts.isPropertyAccessExpression(parent) ||
+          ts.isElementAccessExpression(parent)) &&
+        parent.expression === node;
 
       if (chain && chain.segments.length > 0 && !isNestedInLongerChain) {
         collected[chain.root].add(chain.segments.join('.'));
@@ -120,7 +138,9 @@ const collectGeneratedAssetUsages = (code, filePath, config) => {
 
   visit(sourceFile);
 
-  return Object.fromEntries(Object.entries(collected).map(([root, set]) => [root, sortUnique(set)]));
+  return Object.fromEntries(
+    Object.entries(collected).map(([root, set]) => [root, sortUnique(set)]),
+  );
 };
 
 const collectRequireAssetPaths = ({ code, filePath, projectRoot }) => {
@@ -129,7 +149,7 @@ const collectRequireAssetPaths = ({ code, filePath, projectRoot }) => {
   const collected = new Set();
   const baseDir = path.join(projectRoot, path.dirname(filePath));
 
-  const visit = node => {
+  const visit = (node) => {
     if (
       ts.isCallExpression(node) &&
       ts.isIdentifier(node.expression) &&
@@ -157,7 +177,12 @@ const collectRequireAssetPaths = ({ code, filePath, projectRoot }) => {
   return sortUnique(collected);
 };
 
-const auditAssetUsage = ({ manifest, generatedUsages, requirePaths, config }) => {
+const auditAssetUsage = ({
+  manifest,
+  generatedUsages,
+  requirePaths,
+  config,
+}) => {
   const requirePathSet = new Set(requirePaths);
   const generatedRoots = buildGeneratedRoots(config);
   const manifestEntries = [];
@@ -187,13 +212,15 @@ const auditAssetUsage = ({ manifest, generatedUsages, requirePaths, config }) =>
   }
 
   const unusedEntries = manifestEntries
-    .filter(entry => {
+    .filter((entry) => {
       const rootName = config.types[entry.type]?.exportName;
       const fullKey = `${rootName}.${entry.keyPath}`;
 
-      return !generatedUsageSet.has(fullKey) && !requirePathSet.has(entry.filePath);
+      return (
+        !generatedUsageSet.has(fullKey) && !requirePathSet.has(entry.filePath)
+      );
     })
-    .map(entry => `${entry.type}:${entry.keyPath}`)
+    .map((entry) => `${entry.type}:${entry.keyPath}`)
     .sort((left, right) => left.localeCompare(right));
 
   return {
@@ -214,7 +241,7 @@ const resolveUnusedManifestEntries = ({ manifest, unusedEntries }) => {
     }
   }
 
-  return unusedEntries.map(unusedEntry => {
+  return unusedEntries.map((unusedEntry) => {
     const resolved = entriesByKey.get(unusedEntry);
 
     if (!resolved) {
@@ -247,10 +274,10 @@ const applyAuditFix = ({ projectRoot, manifest, unusedEntries }) => {
 };
 
 const listProjectSourceFiles = (projectRoot, sourceRoots) => {
-  const roots = sourceRoots.map(r => path.join(projectRoot, r));
+  const roots = sourceRoots.map((r) => path.join(projectRoot, r));
   const files = [];
 
-  const visit = currentPath => {
+  const visit = (currentPath) => {
     if (!fs.existsSync(currentPath)) {
       return;
     }
@@ -258,7 +285,10 @@ const listProjectSourceFiles = (projectRoot, sourceRoots) => {
     const stat = fs.statSync(currentPath);
 
     if (stat.isFile()) {
-      if (/\.(ts|tsx|js|jsx)$/.test(currentPath) && !currentPath.includes(`${path.sep}generated${path.sep}`)) {
+      if (
+        /\.(ts|tsx|js|jsx)$/.test(currentPath) &&
+        !currentPath.includes(`${path.sep}generated${path.sep}`)
+      ) {
         files.push(currentPath);
       }
       return;
@@ -279,10 +309,17 @@ const listProjectSourceFiles = (projectRoot, sourceRoots) => {
 
   roots.forEach(visit);
 
-  return files.map(filePath => path.relative(projectRoot, filePath).split(path.sep).join('/'));
+  return files.map((filePath) =>
+    path.relative(projectRoot, filePath).split(path.sep).join('/'),
+  );
 };
 
-const compareManifestToFilesystem = ({ projectRoot, manifest, types, config }) => {
+const compareManifestToFilesystem = ({
+  projectRoot,
+  manifest,
+  types,
+  config,
+}) => {
   const discoveredEntries = collectAssetEntries({
     projectRoot,
     types,
@@ -295,23 +332,33 @@ const compareManifestToFilesystem = ({ projectRoot, manifest, types, config }) =
     generatedAt: manifest.generatedAt,
   });
 
-  return JSON.stringify(discoveredManifest.types) === JSON.stringify(manifest.types);
+  return (
+    JSON.stringify(discoveredManifest.types) === JSON.stringify(manifest.types)
+  );
 };
 
 const main = (argv, config) => {
   try {
     const { types, fix } = parseAuditCliArgs(argv, config);
     const projectRoot = process.cwd();
-    const manifestPath = path.join(projectRoot, config.outputDir, 'assets.manifest.json');
+    const manifestPath = path.join(
+      projectRoot,
+      config.outputDir,
+      'assets.manifest.json',
+    );
 
     if (!fs.existsSync(manifestPath)) {
-      throw new Error(`Missing generated manifest: ${path.join(config.outputDir, 'assets.manifest.json')}`);
+      throw new Error(
+        `Missing generated manifest: ${path.join(config.outputDir, 'assets.manifest.json')}`,
+      );
     }
 
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
     const sourceFiles = listProjectSourceFiles(projectRoot, config.sourceRoots);
     const generatedRoots = buildGeneratedRoots(config);
-    const generatedUsageSets = Object.fromEntries(Object.keys(generatedRoots).map(k => [k, new Set()]));
+    const generatedUsageSets = Object.fromEntries(
+      Object.keys(generatedRoots).map((k) => [k, new Set()]),
+    );
     const requirePaths = new Set();
 
     for (const filePath of sourceFiles) {
@@ -319,20 +366,25 @@ const main = (argv, config) => {
       const usages = collectGeneratedAssetUsages(code, filePath, config);
 
       Object.entries(usages).forEach(([rootName, keyPaths]) => {
-        keyPaths.forEach(keyPath => generatedUsageSets[rootName].add(keyPath));
+        keyPaths.forEach((keyPath) =>
+          generatedUsageSets[rootName].add(keyPath),
+        );
       });
 
       collectRequireAssetPaths({
         code,
         filePath,
         projectRoot,
-      }).forEach(assetPath => requirePaths.add(assetPath));
+      }).forEach((assetPath) => requirePaths.add(assetPath));
     }
 
     const report = auditAssetUsage({
       manifest,
       generatedUsages: Object.fromEntries(
-        Object.entries(generatedUsageSets).map(([root, set]) => [root, sortUnique(set)]),
+        Object.entries(generatedUsageSets).map(([root, set]) => [
+          root,
+          sortUnique(set),
+        ]),
       ),
       requirePaths: sortUnique(requirePaths),
       config,
@@ -345,13 +397,17 @@ const main = (argv, config) => {
     });
 
     if (!manifestMatchesFilesystem) {
-      console.error('Generated manifest is stale relative to the current asset filesystem.');
+      console.error(
+        'Generated manifest is stale relative to the current asset filesystem.',
+      );
       process.exit(1);
     }
 
     if (report.unknownGeneratedUsages.length > 0) {
       console.error('Unknown generated asset usages detected:');
-      report.unknownGeneratedUsages.forEach(value => console.error(`- ${value}`));
+      report.unknownGeneratedUsages.forEach((value) =>
+        console.error(`- ${value}`),
+      );
       process.exit(1);
     }
 
@@ -374,13 +430,13 @@ const main = (argv, config) => {
       });
 
       console.log('Deleted unused generated assets:');
-      deletedFiles.forEach(value => console.log(`- ${value}`));
+      deletedFiles.forEach((value) => console.log(`- ${value}`));
       return;
     }
 
     if (report.unusedEntries.length > 0) {
       console.log('Unused generated assets:');
-      report.unusedEntries.forEach(value => console.log(`- ${value}`));
+      report.unusedEntries.forEach((value) => console.log(`- ${value}`));
     } else {
       console.log('No unused generated assets detected.');
     }

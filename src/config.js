@@ -28,7 +28,7 @@ const DEFAULT_CONFIG = {
   },
 };
 
-const normalizeExtensions = value => {
+const normalizeExtensions = (value) => {
   if (value instanceof Set) {
     return value;
   }
@@ -60,7 +60,10 @@ const mergeConfig = (defaults, overrides) => {
       outputDir: defaults.outputDir,
       sourceRoots: [...defaults.sourceRoots],
       types: Object.fromEntries(
-        Object.entries(defaults.types).map(([type, config]) => [type, { ...config }]),
+        Object.entries(defaults.types).map(([type, config]) => [
+          type,
+          { ...config },
+        ]),
       ),
     };
   }
@@ -69,7 +72,10 @@ const mergeConfig = (defaults, overrides) => {
 
   if (overrides.types) {
     for (const [type, userTypeConfig] of Object.entries(overrides.types)) {
-      mergedTypes[type] = mergeTypeConfig(defaults.types[type] ?? {}, userTypeConfig);
+      mergedTypes[type] = mergeTypeConfig(
+        defaults.types[type] ?? {},
+        userTypeConfig,
+      );
     }
   }
 
@@ -80,7 +86,7 @@ const mergeConfig = (defaults, overrides) => {
   };
 };
 
-const loadConfig = projectRoot => {
+const loadConfig = (projectRoot) => {
   const candidates = [
     path.join(projectRoot, 'rn-typed-assets.config.js'),
     path.join(projectRoot, 'rn-typed-assets.config.cjs'),

@@ -6,7 +6,11 @@ const { DEFAULT_CONFIG, mergeConfig } = require('../src/config');
 
 describe('config', () => {
   test('DEFAULT_CONFIG has expected types with correct defaults', () => {
-    expect(Object.keys(DEFAULT_CONFIG.types)).toEqual(['image', 'svg', 'lottie']);
+    expect(Object.keys(DEFAULT_CONFIG.types)).toEqual([
+      'image',
+      'svg',
+      'lottie',
+    ]);
     expect(DEFAULT_CONFIG.outputDir).toBe(path.join('src', 'generated'));
     expect(DEFAULT_CONFIG.sourceRoots).toEqual(['src', 'App.tsx', 'index.js']);
   });
@@ -16,7 +20,9 @@ describe('config', () => {
 
     expect(config.outputDir).toBe(DEFAULT_CONFIG.outputDir);
     expect(config.sourceRoots).toEqual(DEFAULT_CONFIG.sourceRoots);
-    expect(Object.keys(config.types)).toEqual(Object.keys(DEFAULT_CONFIG.types));
+    expect(Object.keys(config.types)).toEqual(
+      Object.keys(DEFAULT_CONFIG.types),
+    );
   });
 
   test('mergeConfig overrides outputDir and sourceRoots', () => {
@@ -27,7 +33,9 @@ describe('config', () => {
 
     expect(config.outputDir).toBe('generated');
     expect(config.sourceRoots).toEqual(['src']);
-    expect(Object.keys(config.types)).toEqual(Object.keys(DEFAULT_CONFIG.types));
+    expect(Object.keys(config.types)).toEqual(
+      Object.keys(DEFAULT_CONFIG.types),
+    );
   });
 
   test('mergeConfig deep-merges type overrides and preserves unspecified type defaults', () => {
@@ -43,7 +51,9 @@ describe('config', () => {
     expect(config.types.image.rootDir).toBe('assets/images');
     expect(config.types.image.exportName).toBe('Images');
     // unspecified fields preserved from defaults
-    expect(config.types.image.typeImport).toEqual(DEFAULT_CONFIG.types.image.typeImport);
+    expect(config.types.image.typeImport).toEqual(
+      DEFAULT_CONFIG.types.image.typeImport,
+    );
     // other types untouched
     expect(config.types.lottie).toEqual(DEFAULT_CONFIG.types.lottie);
     expect(config.types.svg).toEqual(DEFAULT_CONFIG.types.svg);

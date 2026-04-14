@@ -27,9 +27,16 @@ const makeTempProject = () => {
 
 describe('core', () => {
   test('parseTypesArg defaults to all types and validates enum values', () => {
-    expect(parseTypesArg(undefined, DEFAULT_CONFIG)).toEqual(Object.keys(DEFAULT_CONFIG.types));
-    expect(parseTypesArg('image,lottie', DEFAULT_CONFIG)).toEqual(['image', 'lottie']);
-    expect(() => parseTypesArg('image,unknown', DEFAULT_CONFIG)).toThrow('Unsupported asset type: unknown');
+    expect(parseTypesArg(undefined, DEFAULT_CONFIG)).toEqual(
+      Object.keys(DEFAULT_CONFIG.types),
+    );
+    expect(parseTypesArg('image,lottie', DEFAULT_CONFIG)).toEqual([
+      'image',
+      'lottie',
+    ]);
+    expect(() => parseTypesArg('image,unknown', DEFAULT_CONFIG)).toThrow(
+      'Unsupported asset type: unknown',
+    );
   });
 
   test('normalizeAssetName converts file names into stable camelCase keys', () => {
@@ -58,13 +65,13 @@ describe('core', () => {
       config: DEFAULT_CONFIG,
     });
 
-    expect(entries.map(entry => `${entry.type}:${entry.keyPath}`)).toEqual([
+    expect(entries.map((entry) => `${entry.type}:${entry.keyPath}`)).toEqual([
       'image:bannerIcon.n1',
       'image:coupang.hariniCry',
       'lottie:loading',
     ]);
 
-    expect(entries.map(entry => entry.filePath)).toEqual([
+    expect(entries.map((entry) => entry.filePath)).toEqual([
       'src/assets/banner-icon/1.png',
       'src/assets/coupang/harini-cry.png',
       'src/assets/lottie/loading.json',
@@ -103,7 +110,10 @@ describe('core', () => {
       config: DEFAULT_CONFIG,
     });
 
-    expect(entries.map(entry => entry.keyPath)).toEqual(['pointAsset', 'point.coffee']);
+    expect(entries.map((entry) => entry.keyPath)).toEqual([
+      'pointAsset',
+      'point.coffee',
+    ]);
   });
 
   test('generateAssetsModule emits typed registries with deterministic paths', () => {
@@ -130,10 +140,18 @@ describe('core', () => {
       config: DEFAULT_CONFIG,
     });
 
-    expect(output).toContain("import type { ImageSourcePropType } from 'react-native';");
-    expect(output).toContain("import type { AnimationObject } from 'lottie-react-native';");
-    expect(output).toContain("info: require('../assets/toast/info.png') as ImageSourcePropType");
-    expect(output).toContain("loading: require('../assets/lottie/loading.json') as AnimationObject");
+    expect(output).toContain(
+      "import type { ImageSourcePropType } from 'react-native';",
+    );
+    expect(output).toContain(
+      "import type { AnimationObject } from 'lottie-react-native';",
+    );
+    expect(output).toContain(
+      "info: require('../assets/toast/info.png') as ImageSourcePropType",
+    );
+    expect(output).toContain(
+      "loading: require('../assets/lottie/loading.json') as AnimationObject",
+    );
     expect(output).toContain('export const Svgs = {} as const;');
   });
 

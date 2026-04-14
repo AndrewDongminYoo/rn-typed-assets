@@ -17,7 +17,7 @@
 
     // Recommended Options
     "strict": false,
-    "skipLibCheck": true,
+    "skipLibCheck": true
   },
   "include": ["src/**/*"]
 }

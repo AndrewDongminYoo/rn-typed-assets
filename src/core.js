@@ -44,7 +44,7 @@ const RESERVED_WORDS = new Set([
   'yield',
 ]);
 
-const toPosixPath = value => value.split(path.sep).join('/');
+const toPosixPath = (value) => value.split(path.sep).join('/');
 
 const parseTypesArg = (rawTypes, config) => {
   const validTypes = Object.keys(config.types);
@@ -54,7 +54,9 @@ const parseTypesArg = (rawTypes, config) => {
   }
 
   const uniqueTypes = new Set(
-    (Array.isArray(rawTypes) ? rawTypes : String(rawTypes).split(',')).map(value => value.trim()).filter(Boolean),
+    (Array.isArray(rawTypes) ? rawTypes : String(rawTypes).split(','))
+      .map((value) => value.trim())
+      .filter(Boolean),
   );
 
   for (const type of uniqueTypes) {
@@ -63,7 +65,7 @@ const parseTypesArg = (rawTypes, config) => {
     }
   }
 
-  return validTypes.filter(type => uniqueTypes.has(type));
+  return validTypes.filter((type) => uniqueTypes.has(type));
 };
 
 const parseCliArgs = (argv, config) => {
@@ -88,7 +90,7 @@ const parseCliArgs = (argv, config) => {
   };
 };
 
-const getScriptKind = filePath => {
+const getScriptKind = (filePath) => {
   const extension = path.extname(filePath).toLowerCase();
 
   if (extension === '.tsx') {
@@ -106,7 +108,7 @@ const getScriptKind = filePath => {
   return 'js';
 };
 
-const normalizeAssetName = value => {
+const normalizeAssetName = (value) => {
   const sanitized = String(value)
     .trim()
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
@@ -120,7 +122,7 @@ const normalizeAssetName = value => {
 
   const tokens = sanitized
     .split(/\s+/)
-    .map(token => token.toLowerCase())
+    .map((token) => token.toLowerCase())
     .filter(Boolean);
 
   if (tokens.length === 0) {
@@ -128,7 +130,9 @@ const normalizeAssetName = value => {
   }
 
   const [first, ...rest] = tokens;
-  let normalized = first + rest.map(token => token[0].toUpperCase() + token.slice(1)).join('');
+  let normalized =
+    first +
+    rest.map((token) => token[0].toUpperCase() + token.slice(1)).join('');
 
   if (/^\d/.test(normalized)) {
     normalized = `n${normalized}`;
@@ -145,10 +149,10 @@ const normalizeAssetName = value => {
   return normalized;
 };
 
-const listFilesRecursively = absoluteRoot => {
+const listFilesRecursively = (absoluteRoot) => {
   const files = [];
 
-  const visit = currentPath => {
+  const visit = (currentPath) => {
     const dirents = fs
       .readdirSync(currentPath, { withFileTypes: true })
       .sort((left, right) => left.name.localeCompare(right.name));
@@ -174,11 +178,13 @@ const listFilesRecursively = absoluteRoot => {
   return files;
 };
 
-const buildRegistryTree = entries => {
+const buildRegistryTree = (entries) => {
   const root = { kind: 'branch', children: new Map() };
 
   const getCollisionKey = (cursor, segment) => {
-    let candidate = segment.endsWith('Asset') ? `${segment}File` : `${segment}Asset`;
+    let candidate = segment.endsWith('Asset')
+      ? `${segment}File`
+      : `${segment}Asset`;
 
     while (cursor.children.has(candidate)) {
       candidate = `${candidate}File`;
@@ -210,7 +216,10 @@ const buildRegistryTree = entries => {
             return;
           }
 
-          const existingPath = existingNode.kind === 'leaf' ? existingNode.entry.filePath : `${entry.keyPath}/*`;
+          const existingPath =
+            existingNode.kind === 'leaf'
+              ? existingNode.entry.filePath
+              : `${entry.keyPath}/*`;
 
           throw new Error(
             `Duplicate generated asset key "${entry.keyPath}" for "${entry.filePath}" and "${existingPath}"`,
@@ -250,8 +259,13 @@ const collectAssetEntries = ({ projectRoot, types, config }) => {
     const typeConfig = config.types[type];
     const absoluteRoot = path.join(projectRoot, typeConfig.rootDir);
 
-    if (!fs.existsSync(absoluteRoot) || !fs.statSync(absoluteRoot).isDirectory()) {
-      throw new Error(`Asset root not found for type "${type}": ${typeConfig.rootDir}`);
+    if (
+      !fs.existsSync(absoluteRoot) ||
+      !fs.statSync(absoluteRoot).isDirectory()
+    ) {
+      throw new Error(
+        `Asset root not found for type "${type}": ${typeConfig.rootDir}`,
+      );
     }
 
     const files = listFilesRecursively(absoluteRoot);
@@ -263,11 +277,18 @@ const collectAssetEntries = ({ projectRoot, types, config }) => {
         continue;
       }
 
-      const relativeFilePath = toPosixPath(path.relative(projectRoot, absoluteFilePath));
+      const relativeFilePath = toPosixPath(
+        path.relative(projectRoot, absoluteFilePath),
+      );
       const relativeToRoot = path.relative(absoluteRoot, absoluteFilePath);
       const parsed = path.parse(relativeToRoot);
-      const dirSegments = parsed.dir ? parsed.dir.split(path.sep).filter(Boolean) : [];
-      const keySegments = [...dirSegments.map(normalizeAssetName), normalizeAssetName(parsed.name)];
+      const dirSegments = parsed.dir
+        ? parsed.dir.split(path.sep).filter(Boolean)
+        : [];
+      const keySegments = [
+        ...dirSegments.map(normalizeAssetName),
+        normalizeAssetName(parsed.name),
+      ];
 
       entries.push({
         type,
@@ -282,7 +303,7 @@ const collectAssetEntries = ({ projectRoot, types, config }) => {
   entries.sort((left, right) => left.filePath.localeCompare(right.filePath));
 
   for (const type of selectedTypes) {
-    buildRegistryTree(entries.filter(entry => entry.type === type));
+    buildRegistryTree(entries.filter((entry) => entry.type === type));
   }
 
   return entries;
@@ -290,7 +311,9 @@ const collectAssetEntries = ({ projectRoot, types, config }) => {
 
 const renderTreeNode = (node, valueType, indentLevel) => {
   const indent = '  '.repeat(indentLevel);
-  const children = [...node.children.entries()].sort(([left], [right]) => left.localeCompare(right));
+  const children = [...node.children.entries()].sort(([left], [right]) =>
+    left.localeCompare(right),
+  );
 
   if (children.length === 0) {
     return '{}';
@@ -300,11 +323,15 @@ const renderTreeNode = (node, valueType, indentLevel) => {
 
   for (const [key, child] of children) {
     if (child.kind === 'leaf') {
-      lines.push(`${indent}  ${key}: require('${child.entry.modulePath}') as ${valueType},`);
+      lines.push(
+        `${indent}  ${key}: require('${child.entry.modulePath}') as ${valueType},`,
+      );
       continue;
     }
 
-    lines.push(`${indent}  ${key}: ${renderTreeNode(child, valueType, indentLevel + 1)},`);
+    lines.push(
+      `${indent}  ${key}: ${renderTreeNode(child, valueType, indentLevel + 1)},`,
+    );
   }
 
   lines.push(`${indent}}`);
@@ -315,7 +342,11 @@ const renderTreeNode = (node, valueType, indentLevel) => {
 const generateAssetsModule = ({ entries, types, config }) => {
   const selectedTypes = parseTypesArg(types, config);
   const allTypes = Object.keys(config.types);
-  const lines = ['/* eslint-disable */', '// Auto-generated by rn-typed-assets. Do not edit manually.', ''];
+  const lines = [
+    '/* eslint-disable */',
+    '// Auto-generated by rn-typed-assets. Do not edit manually.',
+    '',
+  ];
 
   // Collect type imports (deduplicated by module)
   const seenImports = new Map();
@@ -335,7 +366,9 @@ const generateAssetsModule = ({ entries, types, config }) => {
   }
 
   for (const [from, typeNames] of seenImports) {
-    lines.push(`import type { ${[...typeNames].sort().join(', ')} } from '${from}';`);
+    lines.push(
+      `import type { ${[...typeNames].sort().join(', ')} } from '${from}';`,
+    );
   }
 
   // Inline type aliases (e.g. SvgAssetSource = unknown)
@@ -343,7 +376,8 @@ const generateAssetsModule = ({ entries, types, config }) => {
     const typeConfig = config.types[type];
 
     if (typeConfig.inlineType) {
-      const inlineTypeName = typeConfig.inlineTypeName ?? `${typeConfig.exportName}AssetSource`;
+      const inlineTypeName =
+        typeConfig.inlineTypeName ?? `${typeConfig.exportName}AssetSource`;
 
       lines.push(`export type ${inlineTypeName} = ${typeConfig.inlineType};`);
     }
@@ -355,7 +389,7 @@ const generateAssetsModule = ({ entries, types, config }) => {
 
   for (const type of allTypes) {
     const typeConfig = config.types[type];
-    const typeEntries = entries.filter(entry => entry.type === type);
+    const typeEntries = entries.filter((entry) => entry.type === type);
     const shouldEmit = selectedTypes.includes(type);
 
     if (!shouldEmit || typeEntries.length === 0) {
@@ -364,17 +398,27 @@ const generateAssetsModule = ({ entries, types, config }) => {
     }
 
     const valueType =
-      typeConfig.typeImport?.typeName ?? (typeConfig.inlineTypeName ?? `${typeConfig.exportName}AssetSource`);
+      typeConfig.typeImport?.typeName ??
+      typeConfig.inlineTypeName ??
+      `${typeConfig.exportName}AssetSource`;
     const tree = buildRegistryTree(typeEntries);
     const objectLiteral = renderTreeNode(tree, valueType, 0);
 
-    lines.push(`export const ${typeConfig.exportName} = ${objectLiteral} as const;`, '');
+    lines.push(
+      `export const ${typeConfig.exportName} = ${objectLiteral} as const;`,
+      '',
+    );
   }
 
   return lines.join('\n').trimEnd() + '\n';
 };
 
-const generateAssetsManifest = ({ entries, types, config, generatedAt = new Date().toISOString() }) => {
+const generateAssetsManifest = ({
+  entries,
+  types,
+  config,
+  generatedAt = new Date().toISOString(),
+}) => {
   const selectedTypes = parseTypesArg(types, config);
   const manifest = {
     generatedAt,
@@ -384,8 +428,8 @@ const generateAssetsManifest = ({ entries, types, config, generatedAt = new Date
 
   for (const type of Object.keys(config.types)) {
     manifest.types[type] = entries
-      .filter(entry => entry.type === type)
-      .map(entry => ({
+      .filter((entry) => entry.type === type)
+      .map((entry) => ({
         keyPath: entry.keyPath,
         filePath: entry.filePath,
         modulePath: entry.modulePath,
@@ -416,7 +460,10 @@ const writeGeneratedAssets = ({ projectRoot, types, config }) => {
 
   fs.mkdirSync(outputDir, { recursive: true });
   fs.writeFileSync(path.join(outputDir, 'assets.gen.ts'), moduleContent);
-  fs.writeFileSync(path.join(outputDir, 'assets.manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
+  fs.writeFileSync(
+    path.join(outputDir, 'assets.manifest.json'),
+    JSON.stringify(manifest, null, 2) + '\n',
+  );
 
   return {
     entries,
