@@ -7,6 +7,7 @@ const path = require('path');
 const {
   parseTypesArg,
   normalizeAssetName,
+  hashFileContent,
   collectAssetEntries,
   generateAssetsModule,
   generateAssetsManifest,
@@ -37,6 +38,23 @@ describe('core', () => {
     expect(() => parseTypesArg('image,unknown', DEFAULT_CONFIG)).toThrow(
       'Unsupported asset type: unknown',
     );
+  });
+
+  test('hashFileContent returns a stable SHA1 hex string for file contents', () => {
+    const tmpFile = path.join(os.tmpdir(), `hash-test-${Date.now()}.txt`);
+
+    fs.writeFileSync(tmpFile, 'hello');
+
+    const hash = hashFileContent(tmpFile);
+
+    expect(hash).toMatch(/^[0-9a-f]{40}$/);
+    expect(hash).toBe(hashFileContent(tmpFile));
+
+    fs.writeFileSync(tmpFile, 'world');
+
+    expect(hashFileContent(tmpFile)).not.toBe(hash);
+
+    fs.unlinkSync(tmpFile);
   });
 
   test('normalizeAssetName converts file names into stable camelCase keys', () => {
@@ -76,6 +94,21 @@ describe('core', () => {
       'src/assets/coupang/harini-cry.png',
       'src/assets/lottie/loading.json',
     ]);
+  });
+
+  test('collectAssetEntries includes a stable contentHash on each entry', () => {
+    const { projectRoot, writeFile } = makeTempProject();
+
+    writeFile('src/assets/logo.png', 'pixel-data');
+
+    const entries = collectAssetEntries({
+      projectRoot,
+      types: ['image'],
+      config: DEFAULT_CONFIG,
+    });
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0].contentHash).toMatch(/^[0-9a-f]{40}$/);
   });
 
   test('collectAssetEntries fails on normalized key collisions', () => {
@@ -155,7 +188,7 @@ describe('core', () => {
     expect(output).toContain('export const Svgs = {} as const;');
   });
 
-  test('generateAssetsManifest records the exact file path for each generated key', () => {
+  test('generateAssetsManifest records contentHash, keyPath, filePath, and modulePath', () => {
     const entries = [
       {
         type: 'image',
@@ -163,6 +196,7 @@ describe('core', () => {
         keySegments: ['coupang', 'hariniCry'],
         filePath: 'src/assets/coupang/harini-cry.png',
         modulePath: '../assets/coupang/harini-cry.png',
+        contentHash: 'abc123',
       },
       {
         type: 'lottie',
@@ -170,6 +204,7 @@ describe('core', () => {
         keySegments: ['loading'],
         filePath: 'src/assets/lottie/loading.json',
         modulePath: '../assets/lottie/loading.json',
+        contentHash: 'def456',
       },
     ];
 
@@ -182,6 +217,7 @@ describe('core', () => {
 
     expect(manifest.types.image).toEqual([
       {
+        contentHash: 'abc123',
         keyPath: 'coupang.hariniCry',
         filePath: 'src/assets/coupang/harini-cry.png',
         modulePath: '../assets/coupang/harini-cry.png',
@@ -189,6 +225,7 @@ describe('core', () => {
     ]);
     expect(manifest.types.lottie).toEqual([
       {
+        contentHash: 'def456',
         keyPath: 'loading',
         filePath: 'src/assets/lottie/loading.json',
         modulePath: '../assets/lottie/loading.json',
