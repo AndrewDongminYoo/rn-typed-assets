@@ -33,6 +33,9 @@ This tool is directly inspired by two codegen tools from other ecosystems:
 - **Deterministic, sorted output** — generated files are stable across runs and friendly to code review
 - **Collision detection** — files that normalize to the same key (e.g. `harini-cry.png` and `harini_cry.png`) are caught at generation time with a clear error
 - **Manifest-backed audit** — find and optionally delete unused assets that are no longer referenced anywhere in source
+- **Automatic source rewriting** — `generate --inplace` and `organize` rewrite every `require()` call and stale dotted reference in your source files to match the regenerated manifest
+- **Content-hash diffing** — each manifest entry now carries a SHA-1 hash of the file's bytes, enabling the codemod to track files that move or are renamed without content changes
+- **Asset organization** — `organize` migrates flat or legacy asset directories into canonical subdirectories (`images/`, `svgs/`, `lotties/`) in one command
 - **Configurable** — override paths, export names, TypeScript type imports, or add entirely new asset types via `rn-typed-assets.config.js`
 - **Programmatic API** — every function is exported; integrate the generator into your own scripts or build tools
 - **Lightweight** — zero runtime dependencies; `typescript` is a peer dependency used only by the audit command
@@ -40,11 +43,19 @@ This tool is directly inspired by two codegen tools from other ecosystems:
 ## How It Works
 
 ```log
-src/assets/                        scripts/
+src/assets/                        commands/
   toast/info.png    ──┐            generate
   toast/warning.png ──┤  scan  ──► assets.gen.ts        (typed require() registry)
-  lottie/loading.json─┤            assets.manifest.json (path ↔ key index)
+  lottie/loading.json─┤            assets.manifest.json (path ↔ key + contentHash)
   svg/logo.svg ───────┘
+
+                                   generate --inplace
+src/**/*.{ts,tsx,js,jsx} ◄──────  rewrite require() → Assets.*
+                                   update stale dotted references
+
+                                   organize src/assets
+  svg/logo.svg ───────► svgs/logo.svg  (move to canonical dir)
+                          → regenerate + rewrite sources
 
                                    audit
 src/**/*.{ts,tsx,js,jsx} ──────►  compare usages in source
@@ -82,7 +93,10 @@ npm install --save-dev rn-typed-assets
 {
   "scripts": {
     "assets:generate": "rn-typed-assets generate",
-    "assets:audit": "rn-typed-assets audit"
+    "assets:generate:inplace": "rn-typed-assets generate --inplace",
+    "assets:organize": "rn-typed-assets organize src/assets",
+    "assets:audit": "rn-typed-assets audit",
+    "assets:audit:fix": "rn-typed-assets audit --fix"
   }
 }
 ```
@@ -131,17 +145,54 @@ rn-typed-assets <command> [options]
 
 Scan asset directories and emit `assets.gen.ts` + `assets.manifest.json`.
 
-| Flag              | Description                                    | Default                       |
-| ----------------- | ---------------------------------------------- | ----------------------------- |
-| `--types <types>` | Comma-separated list of asset types to include | `image,svg,lottie`            |
-| `--root <path>`   | Project root directory                         | `cwd`                         |
-| `--config <path>` | Path to config file                            | `./rn-typed-assets.config.js` |
+| Flag              | Description                                                  | Default                       |
+| ----------------- | ------------------------------------------------------------ | ----------------------------- |
+| `--types <types>` | Comma-separated list of asset types to include               | `image,svg,lottie`            |
+| `--inplace`       | Rewrite source files to replace stale references after regen | `false`                       |
+| `--root <path>`   | Project root directory                                       | `cwd`                         |
+| `--config <path>` | Path to config file                                          | `./rn-typed-assets.config.js` |
 
 ```bash
 rn-typed-assets generate
+rn-typed-assets generate --inplace          # rewrite sources after regen
 rn-typed-assets generate --types=image,lottie
 rn-typed-assets generate --root=/path/to/project
 ```
+
+When `--inplace` is set, the tool loads the previous manifest before writing the new one, diffs them by content hash, and rewrites every source file that contains a stale `require()` path or a renamed dotted symbol reference.
+
+### `organize`
+
+Move asset files from legacy or flat directories into canonical subdirectories, then regenerate and rewrite sources.
+
+```bash
+rn-typed-assets organize <assetsDir>
+```
+
+| Argument      | Description                                          |
+| ------------- | ---------------------------------------------------- |
+| `<assetsDir>` | Path to the asset root to organize (relative to cwd) |
+
+| Flag              | Description            | Default                       |
+| ----------------- | ---------------------- | ----------------------------- |
+| `--types <types>` | Asset types to move    | `image,svg,lottie`            |
+| `--root <path>`   | Project root directory | `cwd`                         |
+| `--config <path>` | Path to config file    | `./rn-typed-assets.config.js` |
+
+```bash
+rn-typed-assets organize src/assets
+```
+
+Canonical subdirectory layout after `organize`:
+
+```log
+src/assets/
+  images/    ← PNG/JPG/WebP
+  svgs/      ← SVG
+  lotties/   ← Lottie JSON
+```
+
+Files already in the canonical location are left untouched. Source files with `require()` calls pointing to the old paths are rewritten automatically.
 
 ### `audit`
 
