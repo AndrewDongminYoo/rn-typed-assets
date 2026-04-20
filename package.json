@@ -1,6 +1,6 @@
 {
   "name": "rn-typed-assets",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Typed asset registry generator and auditor for React Native projects",
   "main": "src/index.js",
   "bin": {

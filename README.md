@@ -343,6 +343,9 @@ const {
   writeGeneratedAssets,
   auditAssetUsage,
   collectGeneratedAssetUsages,
+  // Codemod (v1.1+)
+  diffAssetManifests,
+  rewriteTypedAssetSource,
 } = require('rn-typed-assets');
 
 const config = loadConfig(projectRoot);
@@ -362,6 +365,26 @@ const report = auditAssetUsage({
   requirePaths: [],
   config,
 });
+
+// Codemod — rewrite a source file after a manifest change
+const { renamedSymbols, currentSymbolsByFilePath } = diffAssetManifests({
+  previousManifest,
+  nextManifest,
+  config,
+});
+
+const { changed, code } = rewriteTypedAssetSource({
+  code: fs.readFileSync(filePath, 'utf8'),
+  filePath, // relative to projectRoot
+  previousManifest,
+  nextManifest,
+  projectRoot,
+  config,
+});
+
+if (changed) {
+  fs.writeFileSync(filePath, code);
+}
 ```
 
 See [`src/index.js`](src/index.js) for the full list of exported functions.
