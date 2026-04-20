@@ -141,13 +141,13 @@ describe('core', () => {
     });
 
     expect(output).toContain(
-      "import type { ImageSourcePropType } from 'react-native';",
+      "import type { ImageRequireSource } from 'react-native';",
     );
     expect(output).toContain(
       "import type { AnimationObject } from 'lottie-react-native';",
     );
     expect(output).toContain(
-      "info: require('../assets/toast/info.png') as ImageSourcePropType",
+      "info: require('../assets/toast/info.png') as ImageRequireSource",
     );
     expect(output).toContain(
       "loading: require('../assets/lottie/loading.json') as AnimationObject",

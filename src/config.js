@@ -11,7 +11,7 @@ const DEFAULT_CONFIG = {
       rootDir: path.join('src', 'assets'),
       extensions: new Set(['.png', '.jpg', '.jpeg', '.webp']),
       exportName: 'Assets',
-      typeImport: { typeName: 'ImageSourcePropType', from: 'react-native' },
+      typeImport: { typeName: 'ImageRequireSource', from: 'react-native' },
     },
     svg: {
       rootDir: path.join('src', 'assets', 'svg'),
