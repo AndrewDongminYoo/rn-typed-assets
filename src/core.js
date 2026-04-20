@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
@@ -45,6 +46,12 @@ const RESERVED_WORDS = new Set([
 ]);
 
 const toPosixPath = (value) => value.split(path.sep).join('/');
+
+const hashFileContent = (absoluteFilePath) =>
+  crypto
+    .createHash('sha1')
+    .update(fs.readFileSync(absoluteFilePath))
+    .digest('hex');
 
 const parseTypesArg = (rawTypes, config) => {
   const validTypes = Object.keys(config.types);
@@ -296,6 +303,7 @@ const collectAssetEntries = ({ projectRoot, types, config }) => {
         keySegments,
         filePath: relativeFilePath,
         modulePath: toPosixPath(path.relative(outputAbsDir, absoluteFilePath)),
+        contentHash: hashFileContent(absoluteFilePath),
       });
     }
   }
@@ -430,6 +438,7 @@ const generateAssetsManifest = ({
     manifest.types[type] = entries
       .filter((entry) => entry.type === type)
       .map((entry) => ({
+        contentHash: entry.contentHash,
         keyPath: entry.keyPath,
         filePath: entry.filePath,
         modulePath: entry.modulePath,
@@ -478,6 +487,7 @@ module.exports = {
   generateAssetsManifest,
   generateAssetsModule,
   getScriptKind,
+  hashFileContent,
   normalizeAssetName,
   parseCliArgs,
   parseTypesArg,
