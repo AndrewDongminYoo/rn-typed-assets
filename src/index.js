@@ -7,6 +7,7 @@ const {
   generateAssetsManifest,
   generateAssetsModule,
   getScriptKind,
+  hashFileContent,
   normalizeAssetName,
   parseCliArgs,
   parseTypesArg,
@@ -24,6 +25,11 @@ const {
   parseAuditCliArgs,
   resolveUnusedManifestEntries,
 } = require('./audit');
+const {
+  diffAssetManifests,
+  flattenManifestEntries,
+  rewriteTypedAssetSource,
+} = require('./codemod');
 
 module.exports = {
   // Config
@@ -37,6 +43,7 @@ module.exports = {
   generateAssetsManifest,
   generateAssetsModule,
   getScriptKind,
+  hashFileContent,
   normalizeAssetName,
   parseCliArgs,
   parseTypesArg,
@@ -53,4 +60,9 @@ module.exports = {
   listProjectSourceFiles,
   parseAuditCliArgs,
   resolveUnusedManifestEntries,
+
+  // Codemod
+  diffAssetManifests,
+  flattenManifestEntries,
+  rewriteTypedAssetSource,
 };
