@@ -1,23 +1,43 @@
 {
   "name": "rn-typed-assets",
   "version": "1.1.0",
-  "description": "Typed asset registry generator and auditor for React Native projects",
+  "description": "React Native typed asset registry — generates type-safe Assets/Svgs/Lotties constants, audits unused files, and rewrites stale imports automatically",
   "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
   "bin": {
     "rn-typed-assets": "src/cli.js"
   },
   "files": [
     "src/",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "test": "jest"
   },
   "keywords": [
     "react-native",
+    "rn",
     "assets",
+    "typed-assets",
+    "asset-registry",
+    "asset-generator",
+    "asset-pipeline",
+    "asset-audit",
     "codegen",
-    "typescript"
+    "code-generator",
+    "typescript",
+    "type-safe",
+    "image",
+    "svg",
+    "lottie",
+    "swiftgen",
+    "fluttergen",
+    "unused-assets",
+    "manifest",
+    "codemod"
   ],
   "engines": {
     "node": ">=20.0.0"
@@ -33,10 +53,17 @@
   },
   "homepage": "https://github.com/AndrewDongminYoo/rn-typed-assets#readme",
   "publishConfig": {
+    "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
+  "sideEffects": false,
   "peerDependencies": {
     "typescript": ">=4.9.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
