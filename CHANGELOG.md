@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-04-21
+
+### Fixed
+
+- **Scoped `eslint-disable` in generated files** — the blanket `/* eslint-disable */` header in `assets.gen.ts` is replaced with `/* eslint-disable @typescript-eslint/no-require-imports -- require() is intentional for React Native static asset bundling */`. Projects using `unicorn/no-abusive-eslint-disable` will no longer see a lint error in the generated file.
+- **No orphaned `import type` statements** — `import type` lines are now only emitted when at least one asset entry of that type exists. Previously, an empty asset directory could produce an unused `import type` line, which triggers `@typescript-eslint/no-unused-vars` and similar rules.
+
+### Changed
+
+- **`typescript` peer dependency is now optional** — marked `optional: true` in `package.json`. The `audit` command still requires TypeScript to be present, but `generate` and `organize` work without it.
+- **Explicit `exports` map** — `package.json` now declares `"exports": { ".": "./src/index.js" }`, enabling correct Node.js ESM-aware module resolution without a fallback scan.
+
 ## [1.1.0] - 2026-04-20
 
 ### Added
