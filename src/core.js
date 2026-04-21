@@ -361,8 +361,9 @@ const generateAssetsModule = ({ entries, types, config }) => {
 
   for (const type of selectedTypes) {
     const typeConfig = config.types[type];
+    const hasEntries = entries.some((entry) => entry.type === type);
 
-    if (typeConfig.typeImport) {
+    if (typeConfig.typeImport && hasEntries) {
       const { typeName, from } = typeConfig.typeImport;
 
       if (!seenImports.has(from)) {
