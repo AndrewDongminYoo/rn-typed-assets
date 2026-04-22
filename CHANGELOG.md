@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-04-22
+
+### Added
+
+- **ES module `import` migration** — `generate --inplace` and `organize` now rewrite ES module import statements for asset files in addition to `require()` calls. When a source file contains `import logo from '../assets/logo.png'`, the codemod removes the import declaration and replaces every reference to the imported binding (`logo`) with the corresponding generated symbol (`Assets.logo`), then adds or extends the `import { Assets } from '…/assets.gen'` statement automatically.
+
+  Supported import forms:
+
+  | Form                                         | Handled                                              |
+  | -------------------------------------------- | ---------------------------------------------------- |
+  | `import logo from '../assets/logo.png'`      | ✅ replaced                                          |
+  | `import { logo } from '../assets/logo.png'`  | ✅ replaced                                          |
+  | `import type logo from '../assets/logo.png'` | ✅ removed (no binding replacement)                  |
+  | `import * as NS from '../assets/logo.png'`   | skipped — namespace imports require manual migration |
+
+  Shorthand property assignments are expanded to avoid syntax errors: `{ logo }` becomes `{ logo: Assets.logo }`.
+
+- **`collectAssetImportBindings`** — new programmatic API function that scans a parsed TypeScript/JavaScript source file for asset `import` declarations and returns the binding → symbol mapping and the text ranges to remove. Useful for integrating ES import migration into custom build scripts.
+
+### New exports (programmatic API)
+
+| Export                       | Module           |
+| ---------------------------- | ---------------- |
+| `collectAssetImportBindings` | `src/codemod.js` |
+
 ## [1.2.0] - 2026-04-21
 
 ### Fixed

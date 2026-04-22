@@ -26,6 +26,7 @@ const {
   resolveUnusedManifestEntries,
 } = require('./audit');
 const {
+  collectAssetImportBindings,
   diffAssetManifests,
   flattenManifestEntries,
   rewriteTypedAssetSource,
@@ -62,6 +63,7 @@ module.exports = {
   resolveUnusedManifestEntries,
 
   // Codemod
+  collectAssetImportBindings,
   diffAssetManifests,
   flattenManifestEntries,
   rewriteTypedAssetSource,
