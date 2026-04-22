@@ -51,7 +51,7 @@
   "bugs": {
     "url": "https://github.com/AndrewDongminYoo/rn-typed-assets/issues"
   },
-  "homepage": "https://github.com/AndrewDongminYoo/rn-typed-assets#readme",
+  "homepage": "https://v0-rn-typed-assets-doc.vercel.app/",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
