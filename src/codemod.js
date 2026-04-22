@@ -213,6 +213,129 @@ const addGeneratedAssetImport = ({
   return code.slice(0, insertAt) + importText + code.slice(insertAt);
 };
 
+const isAssetBindingValuePosition = (node) => {
+  const ts = requireTypescript();
+  const { parent } = node;
+
+  if (!parent) {
+    return false;
+  }
+
+  if (ts.isImportClause(parent) || ts.isImportSpecifier(parent)) {
+    return false;
+  }
+
+  if (ts.isPropertyAccessExpression(parent) && parent.name === node) {
+    return false;
+  }
+
+  if (ts.isPropertyAssignment(parent) && parent.name === node) {
+    return false;
+  }
+
+  if (ts.isBindingElement(parent) && parent.name === node) {
+    return false;
+  }
+
+  if (ts.isParameter(parent) && parent.name === node) {
+    return false;
+  }
+
+  if (ts.isTypeQueryNode(parent)) {
+    return false;
+  }
+
+  // export { logo } cannot become export { Assets.logo } — user must fix manually
+  if (ts.isExportSpecifier(parent)) {
+    return false;
+  }
+
+  return true;
+};
+
+const collectAssetImportBindings = (
+  sourceFile,
+  currentSymbolsByFilePath,
+  projectRoot,
+  filePath,
+) => {
+  const ts = requireTypescript();
+  const bindings = new Map();
+  const importRangesToRemove = [];
+
+  for (const statement of sourceFile.statements) {
+    if (!ts.isImportDeclaration(statement)) {
+      continue;
+    }
+
+    const specifier = statement.moduleSpecifier;
+
+    if (!ts.isStringLiteral(specifier) || !specifier.text.startsWith('.')) {
+      continue;
+    }
+
+    const resolved = path.resolve(
+      path.join(projectRoot, path.dirname(filePath)),
+      specifier.text,
+    );
+    const relativeFilePath = toPosixPath(path.relative(projectRoot, resolved));
+    const nextSymbol = currentSymbolsByFilePath[relativeFilePath];
+
+    if (!nextSymbol) {
+      continue;
+    }
+
+    const clause = statement.importClause;
+
+    if (!clause) {
+      importRangesToRemove.push({
+        start: statement.getStart(sourceFile),
+        end: statement.getEnd(),
+      });
+      continue;
+    }
+
+    if (clause.isTypeOnly) {
+      importRangesToRemove.push({
+        start: statement.getStart(sourceFile),
+        end: statement.getEnd(),
+      });
+      continue;
+    }
+
+    let foundBinding = false;
+
+    if (clause.name) {
+      bindings.set(clause.name.text, nextSymbol);
+      foundBinding = true;
+    }
+
+    const namedBindings = clause.namedBindings;
+
+    if (namedBindings && ts.isNamedImports(namedBindings)) {
+      for (const element of namedBindings.elements) {
+        if (!element.isTypeOnly) {
+          bindings.set(element.name.text, nextSymbol);
+          foundBinding = true;
+        }
+      }
+    }
+
+    if (namedBindings && ts.isNamespaceImport(namedBindings)) {
+      continue;
+    }
+
+    if (foundBinding) {
+      importRangesToRemove.push({
+        start: statement.getStart(sourceFile),
+        end: statement.getEnd(),
+      });
+    }
+  }
+
+  return { bindings, importRangesToRemove };
+};
+
 const rewriteTypedAssetSource = ({
   code,
   filePath,
@@ -231,6 +354,12 @@ const rewriteTypedAssetSource = ({
   });
   const replacements = [];
   const neededRoots = new Set();
+  const { bindings, importRangesToRemove } = collectAssetImportBindings(
+    sourceFile,
+    currentSymbolsByFilePath,
+    projectRoot,
+    filePath,
+  );
 
   const visit = (node) => {
     if (
@@ -286,10 +415,47 @@ const rewriteTypedAssetSource = ({
       }
     }
 
+    if (ts.isShorthandPropertyAssignment(node) && ts.isIdentifier(node.name)) {
+      const symbol = bindings.get(node.name.text);
+
+      if (symbol) {
+        replacements.push({
+          end: node.getEnd(),
+          start: node.getStart(sourceFile),
+          text: `${node.name.text}: ${symbol}`,
+        });
+        neededRoots.add(symbol.split('.')[0]);
+
+        return;
+      }
+    }
+
+    if (ts.isIdentifier(node)) {
+      const symbol = bindings.get(node.text);
+
+      if (symbol && isAssetBindingValuePosition(node)) {
+        replacements.push({
+          end: node.getEnd(),
+          start: node.getStart(sourceFile),
+          text: symbol,
+        });
+        neededRoots.add(symbol.split('.')[0]);
+      }
+    }
+
     ts.forEachChild(node, visit);
   };
 
   visit(sourceFile);
+
+  for (const range of importRangesToRemove) {
+    const end =
+      range.end < code.length && code[range.end] === '\n'
+        ? range.end + 1
+        : range.end;
+
+    replacements.push({ end, start: range.start, text: '' });
+  }
 
   const rewrittenCode = applyReplacements(code, replacements);
   const codeWithImports = addGeneratedAssetImport({
@@ -307,6 +473,7 @@ const rewriteTypedAssetSource = ({
 };
 
 module.exports = {
+  collectAssetImportBindings,
   diffAssetManifests,
   flattenManifestEntries,
   rewriteTypedAssetSource,
