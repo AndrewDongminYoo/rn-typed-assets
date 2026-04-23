@@ -166,27 +166,53 @@ const detectAssetType = (filePath, config) => {
 
 const CANONICAL_SUBDIR = {
   image: 'images',
-  svg: 'svgs',
-  lottie: 'lotties',
+  svg: 'svg',
+  lottie: 'lottie',
 };
 
 const LEGACY_SUBDIRS = {
-  image: [],
-  svg: ['svg'],
-  lottie: ['lottie'],
+  image: ['images'],
+  svg: ['svg', 'svgs'],
+  lottie: ['lottie', 'lotties'],
+};
+
+const isNestedPath = (parentPath, childPath) => {
+  const relativePath = path.relative(parentPath, childPath);
+
+  return (
+    Boolean(relativePath) &&
+    relativePath !== '..' &&
+    !relativePath.startsWith(`..${path.sep}`) &&
+    !path.isAbsolute(relativePath)
+  );
+};
+
+const resolveOrganizeDestinationRoot = ({
+  assetsAbsoluteDir,
+  projectRoot,
+  config,
+  type,
+}) => {
+  const typeRootDir = config.types[type]?.rootDir;
+
+  if (typeRootDir) {
+    const configuredRoot = path.resolve(projectRoot, typeRootDir);
+
+    if (isNestedPath(assetsAbsoluteDir, configuredRoot)) {
+      return configuredRoot;
+    }
+  }
+
+  return path.join(assetsAbsoluteDir, CANONICAL_SUBDIR[type] || type);
 };
 
 const resolveOrganizeRelativePath = ({
   absoluteFilePath,
   assetsAbsoluteDir,
+  destinationRoot,
   type,
 }) => {
-  const canonicalRoot = path.join(
-    assetsAbsoluteDir,
-    CANONICAL_SUBDIR[type] || type,
-  );
-
-  if (absoluteFilePath.startsWith(`${canonicalRoot}${path.sep}`)) {
+  if (absoluteFilePath.startsWith(`${destinationRoot}${path.sep}`)) {
     return null;
   }
 
@@ -277,9 +303,17 @@ const runOrganize = (argv, projectRoot, config) => {
         continue;
       }
 
+      const destinationRoot = resolveOrganizeDestinationRoot({
+        assetsAbsoluteDir,
+        projectRoot,
+        config,
+        type,
+      });
+
       const relativePath = resolveOrganizeRelativePath({
         absoluteFilePath,
         assetsAbsoluteDir,
+        destinationRoot,
         type,
       });
 
@@ -287,11 +321,7 @@ const runOrganize = (argv, projectRoot, config) => {
         continue;
       }
 
-      const destinationPath = path.join(
-        assetsAbsoluteDir,
-        CANONICAL_SUBDIR[type] || type,
-        relativePath,
-      );
+      const destinationPath = path.join(destinationRoot, relativePath);
 
       if (destinationPath === absoluteFilePath) {
         continue;

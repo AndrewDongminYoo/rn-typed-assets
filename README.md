@@ -35,7 +35,7 @@ This tool is directly inspired by two codegen tools from other ecosystems:
 - **Manifest-backed audit** — find and optionally delete unused assets that are no longer referenced anywhere in source
 - **Automatic source rewriting** — `generate --inplace` and `organize` rewrite every `require()` call, ES module `import` statement, and stale dotted reference in your source files to match the regenerated manifest
 - **Content-hash diffing** — each manifest entry now carries a SHA-1 hash of the file's bytes, enabling the codemod to track files that move or are renamed without content changes
-- **Asset organization** — `organize` migrates flat or legacy asset directories into canonical subdirectories (`images/`, `svgs/`, `lotties/`) in one command
+- **Asset organization** — `organize` migrates flat or legacy asset directories into canonical subdirectories (`images/`, `svg/`, `lottie/`) in one command
 - **Configurable** — override paths, export names, TypeScript type imports, or add entirely new asset types via `rn-typed-assets.config.js`
 - **Programmatic API** — every function is exported; integrate the generator into your own scripts or build tools
 - **Lightweight** — zero runtime dependencies; `typescript` is a peer dependency used only by the audit command
@@ -55,7 +55,7 @@ src/**/*.{ts,tsx,js,jsx} ◄──────  rewrite require() → Assets.*
                                    update stale dotted references
 
                                    organize src/assets
-  svg/logo.svg ───────► svgs/logo.svg  (move to canonical dir)
+  svg/logo.svg ───────► svg/logo.svg   (move to canonical dir)
                           → regenerate + rewrite sources
 
                                    audit
@@ -201,8 +201,8 @@ Canonical subdirectory layout after `organize`:
 ```log
 src/assets/
   images/    ← PNG/JPG/WebP
-  svgs/      ← SVG
-  lotties/   ← Lottie JSON
+  svg/       ← SVG
+  lottie/    ← Lottie JSON
 ```
 
 Files already in the canonical location are left untouched. Source files with `require()` calls pointing to the old paths are rewritten automatically.
