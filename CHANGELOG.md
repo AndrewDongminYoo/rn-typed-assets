@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-04-23
+
+### Fixed
+
+- **`organize` output roots now match generation roots** — `organize` moves assets into each type's configured `rootDir` when that directory is inside the requested asset root, so moved SVG and Lottie files are still discovered by the follow-up generation step.
+- **Legacy plural asset folders are migrated safely** — existing `svgs/` and `lotties/` directories are treated as legacy inputs and migrated to the default `svg/` and `lottie/` roots.
+- **Documentation now matches default asset roots** — README organize examples now use `images/`, `svg/`, and `lottie/`, consistent with the default configuration.
+
 ## [1.3.0] - 2026-04-22
 
 ### Added
