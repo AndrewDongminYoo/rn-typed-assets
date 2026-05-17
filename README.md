@@ -246,9 +246,10 @@ module.exports = {
       extensions: ['.png', '.jpg', '.jpeg', '.webp'], // included extensions
       exportName: 'Assets', // export const Assets = ...
       typeImport: {
-        typeName: 'ImageRequireSource', // TypeScript type name
+        typeName: 'ImageRequireSource', // TypeScript type name to import
         from: 'react-native', // import source
       },
+      // valueType: 'React.FC<ImageProps>', // annotation applied to values (defaults to typeImport.typeName)
     },
     svg: {
       rootDir: 'src/assets/svg',

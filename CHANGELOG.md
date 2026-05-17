@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-05-17
+
+### Added
+
+- **`valueType` config field** — each type config in `rn-typed-assets.config.js` now accepts an optional `valueType` string that controls the TypeScript annotation applied to generated values independently of the imported type name. Useful when the value annotation is a composite type (e.g. `React.FC<SvgProps>`) that differs from the raw imported name (`SvgProps`).
+
+### Documentation
+
+- **SVG type configuration guide** — added a dedicated section in the README documenting the two SVG usage patterns:
+  - _With `react-native-svg-transformer`_: configure `typeImport + valueType` to get `React.FC<SvgProps>` annotations
+  - _Without transformer (SvgUri)_: configure `typeImport: ImageRequireSource`; `SvgUri.uri` requires a `string` so the number asset ID must be resolved to a URI first
+- Fixed incorrect SVG usage example (`<SvgUri source={...} />` → component pattern with `<Logo />`)
+
 ## [1.4.0] - 2026-04-23
 
 ### Fixed
