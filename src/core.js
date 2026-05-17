@@ -407,6 +407,7 @@ const generateAssetsModule = ({ entries, types, config }) => {
     }
 
     const valueType =
+      typeConfig.valueType ??
       typeConfig.typeImport?.typeName ??
       typeConfig.inlineTypeName ??
       `${typeConfig.exportName}AssetSource`;

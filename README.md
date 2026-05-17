@@ -125,8 +125,8 @@ import { Assets, Lotties, Svgs } from './generated/assets.gen';
 // Lottie
 <LottieView source={Lotties.loading} autoPlay loop />
 
-// SVG (with react-native-svg)
-<SvgUri source={Svgs.logo} />
+// SVG — see "SVG type configuration" below for usage patterns
+const logo = Svgs.logo;
 ```
 
 ### 4. Audit for unused assets
@@ -254,7 +254,8 @@ module.exports = {
       rootDir: 'src/assets/svg',
       extensions: ['.svg'],
       exportName: 'Svgs',
-      inlineType: 'unknown', // emits: export type SvgsAssetSource = unknown
+      // SVG type depends on your setup — see "SVG type configuration" section
+      inlineType: 'unknown',
     },
     lottie: {
       rootDir: 'src/assets/lottie',
@@ -268,6 +269,58 @@ module.exports = {
   },
 };
 ```
+
+### SVG type configuration
+
+SVG files behave differently depending on your Metro setup. The default `inlineType: 'unknown'` is intentionally conservative — override it in your config to match your project.
+
+**Pattern A — with `react-native-svg-transformer`**
+
+`require('./logo.svg')` returns a React component. Configure a real type import and a `valueType`:
+
+```js
+// rn-typed-assets.config.js
+module.exports = {
+  types: {
+    svg: {
+      typeImport: { typeName: 'SvgProps', from: 'react-native-svg' },
+      valueType: 'React.FC<SvgProps>',
+    },
+  },
+};
+```
+
+Usage:
+
+```tsx
+const Logo = Svgs.splash.logo; // React.FC<SvgProps>
+<Logo width={24} height={24} />;
+```
+
+**Pattern B — without transformer, using `SvgUri`**
+
+`require('./logo.svg')` returns a number (Metro asset ID), just like images. You must resolve it to a URI string before passing to `SvgUri.uri`:
+
+```js
+// rn-typed-assets.config.js
+module.exports = {
+  types: {
+    svg: {
+      typeImport: { typeName: 'ImageRequireSource', from: 'react-native' },
+    },
+  },
+};
+```
+
+Usage:
+
+```tsx
+import { Asset } from 'expo-asset'; // Expo
+const uri = Asset.fromModule(Svgs.splash.logo).uri;
+<SvgUri uri={uri} width={24} height={24} />;
+```
+
+> **Note:** `<SvgUri uri={Svgs.splash.logo} />` will not work directly — `SvgUri.uri` is `string | null`, but `require()` without transformer returns `number`.
 
 ### Adding a custom asset type
 

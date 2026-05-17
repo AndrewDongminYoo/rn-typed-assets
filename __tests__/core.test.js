@@ -188,6 +188,44 @@ describe('core', () => {
     expect(output).toContain('export const Svgs = {} as const;');
   });
 
+  test('generateAssetsModule uses valueType override when provided in type config', () => {
+    const entries = [
+      {
+        type: 'svg',
+        keyPath: 'logo',
+        keySegments: ['logo'],
+        filePath: 'src/assets/svg/logo.svg',
+        modulePath: '../assets/svg/logo.svg',
+      },
+    ];
+
+    const configWithTransformer = {
+      ...DEFAULT_CONFIG,
+      types: {
+        ...DEFAULT_CONFIG.types,
+        svg: {
+          ...DEFAULT_CONFIG.types.svg,
+          inlineType: undefined,
+          typeImport: { typeName: 'SvgProps', from: 'react-native-svg' },
+          valueType: 'React.FC<SvgProps>',
+        },
+      },
+    };
+
+    const output = generateAssetsModule({
+      entries,
+      types: ['svg'],
+      config: configWithTransformer,
+    });
+
+    expect(output).toContain(
+      "import type { SvgProps } from 'react-native-svg';",
+    );
+    expect(output).toContain(
+      "logo: require('../assets/svg/logo.svg') as React.FC<SvgProps>",
+    );
+  });
+
   test('generateAssetsManifest records contentHash, keyPath, filePath, and modulePath', () => {
     const entries = [
       {
