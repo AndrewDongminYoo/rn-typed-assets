@@ -37,6 +37,7 @@ jobs:
 
       - run: npm ci
       - run: npm publish
+        if: env.NODE_AUTH_TOKEN != ''
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -49,18 +50,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          registry-url: https://registry.npmjs.org/
+          registry-url: https://npm.pkg.github.com
           cache: npm
 
       - run: npm ci
-      - run: npm publish
+      - run: npm publish --registry https://npm.pkg.github.com
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   create-release:
-    needs:
-      - publish-npm
-      - publish-gpr
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: softprops/action-gh-release@v3
