@@ -115,7 +115,7 @@ const getScriptKind = (filePath) => {
   return 'js';
 };
 
-const normalizeAssetName = (value) => {
+const normalizeAssetName = (value, keyCase = 'camel') => {
   const sanitized = String(value)
     .trim()
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
@@ -136,21 +136,26 @@ const normalizeAssetName = (value) => {
     throw new Error(`Unable to normalize asset name: "${value}"`);
   }
 
+  const isSnake = keyCase === 'snake';
   const [first, ...rest] = tokens;
-  let normalized =
-    first +
-    rest.map((token) => token[0].toUpperCase() + token.slice(1)).join('');
+  let normalized = isSnake
+    ? tokens.join('_')
+    : first +
+      rest.map((token) => token[0].toUpperCase() + token.slice(1)).join('');
+
+  const prefixAsset = (name) =>
+    isSnake ? `asset_${name}` : `asset${name[0].toUpperCase()}${name.slice(1)}`;
 
   if (/^\d/.test(normalized)) {
-    normalized = `n${normalized}`;
+    normalized = isSnake ? `n_${normalized}` : `n${normalized}`;
   }
 
   if (!/^[A-Za-z_$]/.test(normalized)) {
-    normalized = `asset${normalized[0].toUpperCase()}${normalized.slice(1)}`;
+    normalized = prefixAsset(normalized);
   }
 
   if (RESERVED_WORDS.has(normalized)) {
-    normalized = `asset${normalized[0].toUpperCase()}${normalized.slice(1)}`;
+    normalized = prefixAsset(normalized);
   }
 
   return normalized;
@@ -185,16 +190,20 @@ const listFilesRecursively = (absoluteRoot) => {
   return files;
 };
 
-const buildRegistryTree = (entries) => {
+const buildRegistryTree = (entries, options = {}) => {
+  const { keyCase = 'camel', onCollision = 'error', dropped } = options;
   const root = { kind: 'branch', children: new Map() };
+  const isSnake = keyCase === 'snake';
+  const assetSuffix = isSnake ? '_asset' : 'Asset';
+  const fileSuffix = isSnake ? '_file' : 'File';
 
   const getCollisionKey = (cursor, segment) => {
-    let candidate = segment.endsWith('Asset')
-      ? `${segment}File`
-      : `${segment}Asset`;
+    let candidate = segment.endsWith(assetSuffix)
+      ? `${segment}${fileSuffix}`
+      : `${segment}${assetSuffix}`;
 
     while (cursor.children.has(candidate)) {
-      candidate = `${candidate}File`;
+      candidate = `${candidate}${fileSuffix}`;
     }
 
     return candidate;
@@ -228,6 +237,13 @@ const buildRegistryTree = (entries) => {
               ? existingNode.entry.filePath
               : `${entry.keyPath}/*`;
 
+          if (onCollision === 'first') {
+            if (dropped) {
+              dropped.push({ entry, collidesWith: existingPath });
+            }
+            return;
+          }
+
           throw new Error(
             `Duplicate generated asset key "${entry.keyPath}" for "${entry.filePath}" and "${existingPath}"`,
           );
@@ -257,7 +273,7 @@ const buildRegistryTree = (entries) => {
   return root;
 };
 
-const collectAssetEntries = ({ projectRoot, types, config }) => {
+const collectAssetEntries = ({ projectRoot, types, config, collisions }) => {
   const selectedTypes = parseTypesArg(types, config);
   const entries = [];
   const outputAbsDir = path.join(projectRoot, config.outputDir);
@@ -293,8 +309,10 @@ const collectAssetEntries = ({ projectRoot, types, config }) => {
         ? parsed.dir.split(path.sep).filter(Boolean)
         : [];
       const keySegments = [
-        ...dirSegments.map(normalizeAssetName),
-        normalizeAssetName(parsed.name),
+        ...dirSegments.map((segment) =>
+          normalizeAssetName(segment, config.keyCase),
+        ),
+        normalizeAssetName(parsed.name, config.keyCase),
       ];
 
       entries.push({
@@ -310,11 +328,37 @@ const collectAssetEntries = ({ projectRoot, types, config }) => {
 
   entries.sort((left, right) => left.filePath.localeCompare(right.filePath));
 
+  const dropped = [];
+
   for (const type of selectedTypes) {
-    buildRegistryTree(entries.filter((entry) => entry.type === type));
+    buildRegistryTree(
+      entries.filter((entry) => entry.type === type),
+      {
+        keyCase: config.keyCase,
+        onCollision: config.onCollision,
+        dropped,
+      },
+    );
   }
 
-  return entries;
+  if (dropped.length === 0) {
+    return entries;
+  }
+
+  const droppedEntries = new Set(dropped.map((item) => item.entry));
+
+  if (Array.isArray(collisions)) {
+    for (const { entry, collidesWith } of dropped) {
+      collisions.push({
+        type: entry.type,
+        keyPath: entry.keyPath,
+        kept: collidesWith,
+        dropped: entry.filePath,
+      });
+    }
+  }
+
+  return entries.filter((entry) => !droppedEntries.has(entry));
 };
 
 const renderTreeNode = (node, valueType, indentLevel) => {
@@ -411,7 +455,10 @@ const generateAssetsModule = ({ entries, types, config }) => {
       typeConfig.typeImport?.typeName ??
       typeConfig.inlineTypeName ??
       `${typeConfig.exportName}AssetSource`;
-    const tree = buildRegistryTree(typeEntries);
+    const tree = buildRegistryTree(typeEntries, {
+      keyCase: config.keyCase,
+      onCollision: config.onCollision,
+    });
     const objectLiteral = renderTreeNode(tree, valueType, 0);
 
     lines.push(
@@ -452,10 +499,12 @@ const generateAssetsManifest = ({
 
 const writeGeneratedAssets = ({ projectRoot, types, config }) => {
   const selectedTypes = parseTypesArg(types, config);
+  const collisions = [];
   const entries = collectAssetEntries({
     projectRoot,
     types: selectedTypes,
     config,
+    collisions,
   });
   const outputDir = path.join(projectRoot, config.outputDir);
   const moduleContent = generateAssetsModule({
@@ -480,6 +529,7 @@ const writeGeneratedAssets = ({ projectRoot, types, config }) => {
     entries,
     moduleContent,
     manifest,
+    collisions,
   };
 };
 

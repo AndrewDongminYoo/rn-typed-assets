@@ -66,6 +66,14 @@ describe('core', () => {
     expect(normalizeAssetName('1')).toBe('n1');
   });
 
+  test('normalizeAssetName converts file names into snake_case keys when requested', () => {
+    expect(normalizeAssetName('harini-cry', 'snake')).toBe('harini_cry');
+    expect(normalizeAssetName('camera_guide', 'snake')).toBe('camera_guide');
+    expect(normalizeAssetName('Info-Filled', 'snake')).toBe('info_filled');
+    expect(normalizeAssetName('coupangHarini', 'snake')).toBe('coupang_harini');
+    expect(normalizeAssetName('1', 'snake')).toBe('n_1');
+  });
+
   test('collectAssetEntries recursively discovers selected asset types', () => {
     const { projectRoot, writeFile } = makeTempProject();
 
@@ -93,6 +101,28 @@ describe('core', () => {
       'src/assets/banner-icon/1.png',
       'src/assets/coupang/harini-cry.png',
       'src/assets/lottie/loading.json',
+    ]);
+  });
+
+  test('collectAssetEntries produces snake_case keys when config.keyCase is snake', () => {
+    const { projectRoot, writeFile } = makeTempProject();
+
+    writeFile('src/assets/coupang/harini-cry.png');
+    writeFile('src/assets/banner-icon/1.png');
+    writeFile('src/assets/point.png');
+    writeFile('src/assets/point/coffee.png');
+
+    const entries = collectAssetEntries({
+      projectRoot,
+      types: ['image'],
+      config: { ...DEFAULT_CONFIG, keyCase: 'snake' },
+    });
+
+    expect(entries.map((entry) => entry.keyPath)).toEqual([
+      'banner_icon.n_1',
+      'coupang.harini_cry',
+      'point_asset',
+      'point.coffee',
     ]);
   });
 
@@ -129,6 +159,34 @@ describe('core', () => {
         config: DEFAULT_CONFIG,
       }),
     ).toThrow('Duplicate generated asset key "coupang.hariniCry"');
+  });
+
+  test('collectAssetEntries keeps the first sorted path on collision when onCollision is first', () => {
+    const { projectRoot, writeFile } = makeTempProject();
+
+    writeFile('src/assets/coupang/harini-cry.png');
+    writeFile('src/assets/coupang/harini_cry.png');
+
+    const collisions = [];
+    const entries = collectAssetEntries({
+      projectRoot,
+      types: ['image'],
+      config: { ...DEFAULT_CONFIG, onCollision: 'first' },
+      collisions,
+    });
+
+    expect(
+      entries.map((entry) => `${entry.keyPath}:${entry.filePath}`),
+    ).toEqual(['coupang.hariniCry:src/assets/coupang/harini_cry.png']);
+
+    expect(collisions).toEqual([
+      {
+        type: 'image',
+        keyPath: 'coupang.hariniCry',
+        kept: 'src/assets/coupang/harini_cry.png',
+        dropped: 'src/assets/coupang/harini-cry.png',
+      },
+    ]);
   });
 
   test('collectAssetEntries preserves directory namespaces and suffixes conflicting file leaves', () => {
