@@ -63,6 +63,37 @@ const parseConfigArg = (argv) => parseFlagValue(argv, '--config');
 
 const hasFlag = (argv, flag) => argv.includes(flag);
 
+const VALUE_FLAGS = new Set([
+  '--types',
+  '--root',
+  '--config',
+  '--case',
+  '--on-collision',
+  '--output',
+]);
+
+// Collect positional arguments, skipping flags and the values consumed by
+// value-taking flags in their space-separated form (e.g. `--output json`).
+const parsePositionals = (argv) => {
+  const positionals = [];
+
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
+
+    if (arg.startsWith('-')) {
+      if (!arg.includes('=') && VALUE_FLAGS.has(arg)) {
+        i += 1;
+      }
+
+      continue;
+    }
+
+    positionals.push(arg);
+  }
+
+  return positionals;
+};
+
 const resolveConfig = (projectRoot, configFilePath) => {
   if (configFilePath) {
     return mergeConfig(DEFAULT_CONFIG, require(path.resolve(configFilePath)));
@@ -315,12 +346,8 @@ const runAudit = (argv, projectRoot, config, output) => {
 };
 
 const runOrganize = (argv, projectRoot, config, output) => {
-  const typesArg = parseFlagValue(argv, '--types');
-  const types = parseTypesArg(typesArg, config);
-  const positionals = argv.filter(
-    (arg) => !arg.startsWith('-') && arg !== typesArg,
-  );
-  const assetsDir = positionals[0];
+  const types = parseTypesArg(parseFlagValue(argv, '--types'), config);
+  const assetsDir = parsePositionals(argv)[0];
 
   if (!assetsDir) {
     throw new Error('The organize command requires an assets directory.');

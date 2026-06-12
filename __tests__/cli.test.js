@@ -64,6 +64,33 @@ describe('cli', () => {
     );
   });
 
+  test('organize resolves the assets directory placed after a value-taking flag', () => {
+    const { projectRoot, writeFile } = makeTempProject();
+
+    writeFile('src/assets/svgs/logo.svg', '<svg />');
+    fs.mkdirSync(path.join(projectRoot, 'src/assets/svg'), { recursive: true });
+
+    const result = runCli(projectRoot, [
+      'organize',
+      '--output',
+      'json',
+      'src/assets',
+      '--types=svg',
+    ]);
+
+    expect(result.status).toBe(0);
+
+    const envelope = JSON.parse(result.stdout.trim());
+
+    expect(envelope.ok).toBe(true);
+    expect(envelope.data.movedFiles).toEqual([
+      'src/assets/svgs/logo.svg -> src/assets/svg/logo.svg',
+    ]);
+    expect(
+      fs.existsSync(path.join(projectRoot, 'src/assets/svg/logo.svg')),
+    ).toBe(true);
+  });
+
   test('generate --output json prints a single JSON envelope with entries', () => {
     const { projectRoot, writeFile } = makeTempProject();
 
