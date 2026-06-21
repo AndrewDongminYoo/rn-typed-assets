@@ -6,6 +6,8 @@ const path = require('path');
 const DEFAULT_CONFIG = {
   outputDir: path.join('src', 'generated'),
   sourceRoots: ['src', 'App.tsx', 'index.js'],
+  keyCase: 'camel',
+  onCollision: 'error',
   types: {
     image: {
       rootDir: path.join('src', 'assets'),
@@ -54,11 +56,28 @@ const mergeTypeConfig = (defaultTypeConfig, userTypeConfig) => {
   return merged;
 };
 
+const KEY_CASES = new Set(['camel', 'snake']);
+const COLLISION_POLICIES = new Set(['error', 'first']);
+
+const resolveEnum = (value, fallback, allowed, label) => {
+  if (value === undefined) {
+    return fallback;
+  }
+
+  if (!allowed.has(value)) {
+    throw new Error(`Unsupported ${label}: ${value}`);
+  }
+
+  return value;
+};
+
 const mergeConfig = (defaults, overrides) => {
   if (!overrides || typeof overrides !== 'object') {
     return {
       outputDir: defaults.outputDir,
       sourceRoots: [...defaults.sourceRoots],
+      keyCase: defaults.keyCase,
+      onCollision: defaults.onCollision,
       types: Object.fromEntries(
         Object.entries(defaults.types).map(([type, config]) => [
           type,
@@ -82,6 +101,18 @@ const mergeConfig = (defaults, overrides) => {
   return {
     outputDir: overrides.outputDir ?? defaults.outputDir,
     sourceRoots: overrides.sourceRoots ?? [...defaults.sourceRoots],
+    keyCase: resolveEnum(
+      overrides.keyCase,
+      defaults.keyCase,
+      KEY_CASES,
+      'keyCase',
+    ),
+    onCollision: resolveEnum(
+      overrides.onCollision,
+      defaults.onCollision,
+      COLLISION_POLICIES,
+      'onCollision',
+    ),
     types: mergedTypes,
   };
 };

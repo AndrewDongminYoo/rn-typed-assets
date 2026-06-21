@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`--output json` for all commands** — `generate`, `audit`, and `organize` accept `--output <text|json>`. In `json` mode the command prints exactly one machine-readable envelope (`{ ok, command, data, error }`) to stdout and suppresses all human-readable logging, while still signalling success/failure through the process exit code. This makes the tool consumable by AI agents and scripts without screen-scraping.
+- **Configurable key casing (`keyCase`)** — generated asset keys can now be emitted as `camel` (default, unchanged) or `snake` via the `keyCase` config field or the `--case <camel|snake>` CLI flag. Numeric prefixes, reserved-word escaping, and leaf/branch collision suffixes all follow the chosen casing (e.g. `point_asset` instead of `pointAsset`).
+- **Collision policy (`onCollision`)** — when two files normalize to the same key, the new `onCollision` config field / `--on-collision <error|first>` flag selects the behaviour: `error` (default) preserves the existing fail-fast behaviour, while `first` keeps the first sorted path, drops the rest, and reports each dropped file in `data.collisions` (JSON) or as `Collision:` lines (text). The policy is non-interactive by design so it stays compatible with `--output json`.
+
 ## [1.5.0] - 2026-05-17
 
 ### Added

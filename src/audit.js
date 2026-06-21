@@ -14,6 +14,7 @@ const {
   extractPropertyChain,
   requireTypescript,
 } = require('./ts-util');
+const { emitSuccess, emitFailure } = require('./output');
 
 const sortUnique = (values) =>
   [...new Set(values)].sort((left, right) => left.localeCompare(right));
@@ -264,7 +265,10 @@ const compareManifestToFilesystem = ({
   );
 };
 
-const main = (argv, config) => {
+const main = (argv, config, options = {}) => {
+  const output = options.output ?? 'text';
+  const command = 'audit';
+
   try {
     const { types, fix } = parseAuditCliArgs(argv, config);
     const projectRoot = process.cwd();
@@ -323,52 +327,84 @@ const main = (argv, config) => {
       config,
     });
 
+    const baseData = {
+      types,
+      manifestMatchesFilesystem,
+      unknownGeneratedUsages: report.unknownGeneratedUsages,
+      unusedEntries: report.unusedEntries,
+    };
+
     if (!manifestMatchesFilesystem) {
-      console.error(
-        'Generated manifest is stale relative to the current asset filesystem.',
-      );
+      emitFailure({
+        output,
+        command,
+        message:
+          'Generated manifest is stale relative to the current asset filesystem.',
+        data: baseData,
+      });
       process.exit(1);
     }
 
     if (report.unknownGeneratedUsages.length > 0) {
-      console.error('Unknown generated asset usages detected:');
-      report.unknownGeneratedUsages.forEach((value) =>
-        console.error(`- ${value}`),
-      );
+      emitFailure({
+        output,
+        command,
+        message: [
+          'Unknown generated asset usages detected:',
+          ...report.unknownGeneratedUsages.map((value) => `- ${value}`),
+        ].join('\n'),
+        data: baseData,
+      });
       process.exit(1);
     }
 
     if (fix) {
-      if (report.unusedEntries.length === 0) {
-        console.log('No unused generated assets detected.');
-        return;
+      const deletedFiles =
+        report.unusedEntries.length === 0
+          ? []
+          : applyAuditFix({
+              projectRoot,
+              manifest,
+              unusedEntries: report.unusedEntries,
+            });
+
+      if (deletedFiles.length > 0) {
+        writeGeneratedAssets({ projectRoot, types, config });
       }
 
-      const deletedFiles = applyAuditFix({
-        projectRoot,
-        manifest,
-        unusedEntries: report.unusedEntries,
+      emitSuccess({
+        output,
+        command,
+        data: { ...baseData, deletedFiles },
+        textLines:
+          deletedFiles.length > 0
+            ? [
+                'Deleted unused generated assets:',
+                ...deletedFiles.map((value) => `- ${value}`),
+              ]
+            : ['No unused generated assets detected.'],
       });
-
-      writeGeneratedAssets({
-        projectRoot,
-        types,
-        config,
-      });
-
-      console.log('Deleted unused generated assets:');
-      deletedFiles.forEach((value) => console.log(`- ${value}`));
       return;
     }
 
-    if (report.unusedEntries.length > 0) {
-      console.log('Unused generated assets:');
-      report.unusedEntries.forEach((value) => console.log(`- ${value}`));
-    } else {
-      console.log('No unused generated assets detected.');
-    }
+    emitSuccess({
+      output,
+      command,
+      data: baseData,
+      textLines:
+        report.unusedEntries.length > 0
+          ? [
+              'Unused generated assets:',
+              ...report.unusedEntries.map((value) => `- ${value}`),
+            ]
+          : ['No unused generated assets detected.'],
+    });
   } catch (error) {
-    console.error(`Failed to audit assets: ${error.message}`);
+    emitFailure({
+      output,
+      command,
+      message: `Failed to audit assets: ${error.message}`,
+    });
     process.exit(1);
   }
 };

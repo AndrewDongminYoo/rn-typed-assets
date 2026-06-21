@@ -31,6 +31,7 @@ const {
   flattenManifestEntries,
   rewriteTypedAssetSource,
 } = require('./codemod');
+const { parseOutputArg, emitSuccess, emitFailure } = require('./output');
 
 module.exports = {
   // Config
@@ -67,4 +68,9 @@ module.exports = {
   diffAssetManifests,
   flattenManifestEntries,
   rewriteTypedAssetSource,
+
+  // Output
+  parseOutputArg,
+  emitSuccess,
+  emitFailure,
 };

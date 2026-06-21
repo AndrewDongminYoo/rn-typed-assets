@@ -25,6 +25,35 @@ describe('config', () => {
     );
   });
 
+  test('mergeConfig defaults keyCase to camel and onCollision to error', () => {
+    expect(DEFAULT_CONFIG.keyCase).toBe('camel');
+    expect(DEFAULT_CONFIG.onCollision).toBe('error');
+
+    const config = mergeConfig(DEFAULT_CONFIG, {});
+
+    expect(config.keyCase).toBe('camel');
+    expect(config.onCollision).toBe('error');
+  });
+
+  test('mergeConfig overrides keyCase and onCollision', () => {
+    const config = mergeConfig(DEFAULT_CONFIG, {
+      keyCase: 'snake',
+      onCollision: 'first',
+    });
+
+    expect(config.keyCase).toBe('snake');
+    expect(config.onCollision).toBe('first');
+  });
+
+  test('mergeConfig rejects invalid keyCase and onCollision values', () => {
+    expect(() => mergeConfig(DEFAULT_CONFIG, { keyCase: 'kebab' })).toThrow(
+      'Unsupported keyCase: kebab',
+    );
+    expect(() => mergeConfig(DEFAULT_CONFIG, { onCollision: 'merge' })).toThrow(
+      'Unsupported onCollision: merge',
+    );
+  });
+
   test('mergeConfig overrides outputDir and sourceRoots', () => {
     const config = mergeConfig(DEFAULT_CONFIG, {
       outputDir: 'generated',

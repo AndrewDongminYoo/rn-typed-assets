@@ -63,4 +63,150 @@ describe('cli', () => {
       "loading: require('../assets/lottie/loading.json')",
     );
   });
+
+  test('organize resolves the assets directory placed after a value-taking flag', () => {
+    const { projectRoot, writeFile } = makeTempProject();
+
+    writeFile('src/assets/svgs/logo.svg', '<svg />');
+    fs.mkdirSync(path.join(projectRoot, 'src/assets/svg'), { recursive: true });
+
+    const result = runCli(projectRoot, [
+      'organize',
+      '--output',
+      'json',
+      'src/assets',
+      '--types=svg',
+    ]);
+
+    expect(result.status).toBe(0);
+
+    const envelope = JSON.parse(result.stdout.trim());
+
+    expect(envelope.ok).toBe(true);
+    expect(envelope.data.movedFiles).toEqual([
+      'src/assets/svgs/logo.svg -> src/assets/svg/logo.svg',
+    ]);
+    expect(
+      fs.existsSync(path.join(projectRoot, 'src/assets/svg/logo.svg')),
+    ).toBe(true);
+  });
+
+  test('generate --output json prints a single JSON envelope with entries', () => {
+    const { projectRoot, writeFile } = makeTempProject();
+
+    writeFile('src/assets/icons/home.png');
+    writeFile('src/assets/lottie/loading.json', '{}');
+
+    const result = runCli(projectRoot, [
+      'generate',
+      '--types=image,lottie',
+      '--output',
+      'json',
+    ]);
+
+    expect(result.status).toBe(0);
+
+    const envelope = JSON.parse(result.stdout.trim());
+
+    expect(envelope.ok).toBe(true);
+    expect(envelope.command).toBe('generate');
+    expect(envelope.data.count).toBe(2);
+    expect(
+      envelope.data.entries.map((entry) => `${entry.type}:${entry.keyPath}`),
+    ).toEqual(['image:icons.home', 'lottie:loading']);
+  });
+
+  test('generate --case snake produces snake_case keys', () => {
+    const { projectRoot, writeFile } = makeTempProject();
+
+    writeFile('src/assets/icons/home-button.png');
+
+    const result = runCli(projectRoot, [
+      'generate',
+      '--types=image',
+      '--case',
+      'snake',
+      '--output',
+      'json',
+    ]);
+
+    expect(result.status).toBe(0);
+
+    const envelope = JSON.parse(result.stdout.trim());
+
+    expect(envelope.data.entries.map((entry) => entry.keyPath)).toEqual([
+      'icons.home_button',
+    ]);
+  });
+
+  test('generate --on-collision first drops duplicates and reports collisions', () => {
+    const { projectRoot, writeFile } = makeTempProject();
+
+    writeFile('src/assets/icons/home-button.png');
+    writeFile('src/assets/icons/home_button.png');
+
+    const result = runCli(projectRoot, [
+      'generate',
+      '--types=image',
+      '--on-collision',
+      'first',
+      '--output',
+      'json',
+    ]);
+
+    expect(result.status).toBe(0);
+
+    const envelope = JSON.parse(result.stdout.trim());
+
+    expect(envelope.ok).toBe(true);
+    expect(envelope.data.count).toBe(1);
+    expect(envelope.data.collisions).toHaveLength(1);
+    expect(envelope.data.collisions[0].keyPath).toBe('icons.homeButton');
+  });
+
+  test('generate collision defaults to error and emits a JSON failure envelope', () => {
+    const { projectRoot, writeFile } = makeTempProject();
+
+    writeFile('src/assets/icons/home-button.png');
+    writeFile('src/assets/icons/home_button.png');
+
+    const result = runCli(projectRoot, [
+      'generate',
+      '--types=image',
+      '--output',
+      'json',
+    ]);
+
+    expect(result.status).toBe(1);
+
+    const envelope = JSON.parse(result.stdout.trim());
+
+    expect(envelope.ok).toBe(false);
+    expect(envelope.command).toBe('generate');
+    expect(envelope.error.message).toMatch(/Duplicate generated asset key/);
+  });
+
+  test('audit --output json emits a structured envelope', () => {
+    const { projectRoot, writeFile } = makeTempProject();
+
+    writeFile('src/assets/icons/home.png');
+
+    expect(runCli(projectRoot, ['generate', '--types=image']).status).toBe(0);
+
+    const result = runCli(projectRoot, [
+      'audit',
+      '--types=image',
+      '--output',
+      'json',
+    ]);
+
+    expect(result.status).toBe(0);
+
+    const envelope = JSON.parse(result.stdout.trim());
+
+    expect(envelope.ok).toBe(true);
+    expect(envelope.command).toBe('audit');
+    expect(envelope.data.manifestMatchesFilesystem).toBe(true);
+    expect(envelope.data.unusedEntries).toEqual(['image:icons.home']);
+  });
 });
