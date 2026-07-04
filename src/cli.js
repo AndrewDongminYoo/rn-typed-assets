@@ -8,13 +8,19 @@ const { DEFAULT_CONFIG, loadConfig, mergeConfig } = require('./config');
 const {
   collectAssetEntries,
   generateAssetsManifest,
+  listFilesRecursively,
   parseCliArgs,
   parseTypesArg,
   writeGeneratedAssets,
 } = require('./core');
 const { listProjectSourceFiles } = require('./audit');
 const { rewriteTypedAssetSource } = require('./codemod');
-const { parseOutputArg, emitSuccess, emitFailure } = require('./output');
+const {
+  parseFlagValue,
+  parseOutputArg,
+  emitSuccess,
+  emitFailure,
+} = require('./output');
 
 const USAGE = `
 Usage: rn-typed-assets <command> [options]
@@ -43,20 +49,6 @@ Options (audit):
 Options (organize):
   --types <types>     Comma-separated asset types
 `.trim();
-
-const parseFlagValue = (argv, flag) => {
-  for (let i = 0; i < argv.length; i += 1) {
-    if (argv[i].startsWith(`${flag}=`)) {
-      return argv[i].slice(flag.length + 1);
-    }
-
-    if (argv[i] === flag && argv[i + 1]) {
-      return argv[i + 1];
-    }
-  }
-
-  return null;
-};
 
 const parseRootArg = (argv) => parseFlagValue(argv, '--root') ?? process.cwd();
 const parseConfigArg = (argv) => parseFlagValue(argv, '--config');
@@ -164,42 +156,6 @@ const rewriteProjectSources = ({
   return rewrittenFiles;
 };
 
-const listFilesRecursively = (absoluteRoot) => {
-  const files = [];
-
-  const visit = (currentPath) => {
-    if (
-      !fs.existsSync(currentPath) ||
-      !fs.statSync(currentPath).isDirectory()
-    ) {
-      return;
-    }
-
-    const dirents = fs
-      .readdirSync(currentPath, { withFileTypes: true })
-      .sort((left, right) => left.name.localeCompare(right.name));
-
-    for (const dirent of dirents) {
-      if (dirent.name.startsWith('.')) {
-        continue;
-      }
-
-      const nextPath = path.join(currentPath, dirent.name);
-
-      if (dirent.isDirectory()) {
-        visit(nextPath);
-        continue;
-      }
-
-      files.push(nextPath);
-    }
-  };
-
-  visit(absoluteRoot);
-
-  return files;
-};
-
 const detectAssetType = (filePath, config) => {
   const extension = path.extname(filePath).toLowerCase();
 
@@ -289,6 +245,14 @@ const collisionTextLines = (collisions) =>
       `Collision: kept ${collision.kept}, dropped ${collision.dropped} (key ${collision.type}:${collision.keyPath})`,
   );
 
+// Trailing human-readable summary shared by `generate` and `organize`:
+// collision notes, an optional rewrite count, then the generated-bindings line.
+const summaryTextLines = ({ collisions, rewrittenFiles, count, types }) => [
+  ...collisionTextLines(collisions),
+  ...(rewrittenFiles > 0 ? [`Rewrote ${rewrittenFiles} source file(s).`] : []),
+  `Generated ${count} asset bindings for types: ${types.join(', ')}`,
+];
+
 const runGenerate = (argv, projectRoot, config, output) => {
   const { types } = parseCliArgs(argv, config);
   const inplace = hasFlag(argv, '--inplace');
@@ -322,13 +286,12 @@ const runGenerate = (argv, projectRoot, config, output) => {
       collisions,
       entries: toEntryData(entries),
     },
-    textLines: [
-      ...collisionTextLines(collisions),
-      ...(rewrittenFiles > 0
-        ? [`Rewrote ${rewrittenFiles} source file(s).`]
-        : []),
-      `Generated ${entries.length} asset bindings for types: ${types.join(', ')}`,
-    ],
+    textLines: summaryTextLines({
+      collisions,
+      rewrittenFiles,
+      count: entries.length,
+      types,
+    }),
   });
 };
 
@@ -432,11 +395,12 @@ const runOrganize = (argv, projectRoot, config, output) => {
     },
     textLines: [
       ...movedFiles.map((value) => `Moved: ${value}`),
-      ...collisionTextLines(collisions),
-      ...(rewrittenFiles > 0
-        ? [`Rewrote ${rewrittenFiles} source file(s).`]
-        : []),
-      `Generated ${entries.length} asset bindings for types: ${types.join(', ')}`,
+      ...summaryTextLines({
+        collisions,
+        rewrittenFiles,
+        count: entries.length,
+        types,
+      }),
     ],
   });
 };
