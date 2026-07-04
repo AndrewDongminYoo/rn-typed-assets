@@ -150,10 +150,6 @@ const normalizeAssetName = (value, keyCase = 'camel') => {
     normalized = isSnake ? `n_${normalized}` : `n${normalized}`;
   }
 
-  if (!/^[A-Za-z_$]/.test(normalized)) {
-    normalized = prefixAsset(normalized);
-  }
-
   if (RESERVED_WORDS.has(normalized)) {
     normalized = prefixAsset(normalized);
   }
@@ -163,6 +159,13 @@ const normalizeAssetName = (value, keyCase = 'camel') => {
 
 const listFilesRecursively = (absoluteRoot) => {
   const files = [];
+
+  if (
+    !fs.existsSync(absoluteRoot) ||
+    !fs.statSync(absoluteRoot).isDirectory()
+  ) {
+    return files;
+  }
 
   const visit = (currentPath) => {
     const dirents = fs
@@ -345,10 +348,12 @@ const collectAssetEntries = ({ projectRoot, types, config, collisions }) => {
     return entries;
   }
 
-  const droppedEntries = new Set(dropped.map((item) => item.entry));
+  const droppedEntries = new Set();
 
-  if (Array.isArray(collisions)) {
-    for (const { entry, collidesWith } of dropped) {
+  for (const { entry, collidesWith } of dropped) {
+    droppedEntries.add(entry);
+
+    if (Array.isArray(collisions)) {
       collisions.push({
         type: entry.type,
         keyPath: entry.keyPath,
@@ -540,6 +545,7 @@ module.exports = {
   generateAssetsModule,
   getScriptKind,
   hashFileContent,
+  listFilesRecursively,
   normalizeAssetName,
   parseCliArgs,
   parseTypesArg,

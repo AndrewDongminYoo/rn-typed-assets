@@ -2,24 +2,24 @@
 
 const OUTPUT_FORMATS = new Set(['text', 'json']);
 
-const parseOutputArg = (argv) => {
-  let value;
-
-  for (let index = 0; index < argv.length; index += 1) {
-    const arg = argv[index];
-
-    if (arg.startsWith('--output=')) {
-      value = arg.slice('--output='.length);
-      break;
+const parseFlagValue = (argv, flag) => {
+  for (let i = 0; i < argv.length; i += 1) {
+    if (argv[i].startsWith(`${flag}=`)) {
+      return argv[i].slice(flag.length + 1);
     }
 
-    if (arg === '--output' && argv[index + 1]) {
-      value = argv[index + 1];
-      break;
+    if (argv[i] === flag && argv[i + 1]) {
+      return argv[i + 1];
     }
   }
 
-  if (value === undefined) {
+  return null;
+};
+
+const parseOutputArg = (argv) => {
+  const value = parseFlagValue(argv, '--output');
+
+  if (value === null) {
     return 'text';
   }
 
@@ -57,6 +57,7 @@ const emitFailure = ({ output, command, message, data = null }) => {
 };
 
 module.exports = {
+  parseFlagValue,
   parseOutputArg,
   emitSuccess,
   emitFailure,

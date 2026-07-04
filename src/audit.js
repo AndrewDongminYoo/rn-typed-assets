@@ -368,7 +368,9 @@ const main = (argv, config, options = {}) => {
               unusedEntries: report.unusedEntries,
             });
 
-      if (deletedFiles.length > 0) {
+      const anyDeleted = deletedFiles.length > 0;
+
+      if (anyDeleted) {
         writeGeneratedAssets({ projectRoot, types, config });
       }
 
@@ -376,13 +378,12 @@ const main = (argv, config, options = {}) => {
         output,
         command,
         data: { ...baseData, deletedFiles },
-        textLines:
-          deletedFiles.length > 0
-            ? [
-                'Deleted unused generated assets:',
-                ...deletedFiles.map((value) => `- ${value}`),
-              ]
-            : ['No unused generated assets detected.'],
+        textLines: anyDeleted
+          ? [
+              'Deleted unused generated assets:',
+              ...deletedFiles.map((value) => `- ${value}`),
+            ]
+          : ['No unused generated assets detected.'],
       });
       return;
     }
