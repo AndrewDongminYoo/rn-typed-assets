@@ -348,10 +348,12 @@ const collectAssetEntries = ({ projectRoot, types, config, collisions }) => {
     return entries;
   }
 
-  const droppedEntries = new Set(dropped.map((item) => item.entry));
+  const droppedEntries = new Set();
 
-  if (Array.isArray(collisions)) {
-    for (const { entry, collidesWith } of dropped) {
+  for (const { entry, collidesWith } of dropped) {
+    droppedEntries.add(entry);
+
+    if (Array.isArray(collisions)) {
       collisions.push({
         type: entry.type,
         keyPath: entry.keyPath,
