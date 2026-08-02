@@ -146,13 +146,13 @@ rn-typed-assets <command> [options]
 
 These flags work with every command (`generate`, `audit`, `organize`):
 
-| Flag                            | Description                                                                                                | Default                       |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| `--case <camel\|snake>`         | Casing style for generated asset keys                                                                      | `camel`                       |
-| `--on-collision <error\|first>` | When two files normalize to the same key: `error` fails the run, `first` keeps the first sorted path and drops the rest | `error`            |
-| `--output <text\|json>`         | Output format. `json` prints exactly one machine-readable envelope to stdout and suppresses all other logs | `text`                        |
-| `--root <path>`                 | Project root directory                                                                                     | `cwd`                         |
-| `--config <path>`               | Path to config file                                                                                        | `./rn-typed-assets.config.js` |
+| Flag                            | Description                                                                                                             | Default                       |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| `--case <camel\|snake>`         | Casing style for generated asset keys                                                                                   | `camel`                       |
+| `--on-collision <error\|first>` | When two files normalize to the same key: `error` fails the run, `first` keeps the first sorted path and drops the rest | `error`                       |
+| `--output <text\|json>`         | Output format. `json` prints exactly one machine-readable envelope to stdout and suppresses all other logs              | `text`                        |
+| `--root <path>`                 | Project root directory                                                                                                  | `cwd`                         |
+| `--config <path>`               | Path to config file                                                                                                     | `./rn-typed-assets.config.js` |
 
 CLI flags override the equivalent `keyCase` / `onCollision` settings in your config file.
 
@@ -167,16 +167,21 @@ With `--output json`, every command emits exactly one JSON envelope to stdout an
 On failure (`ok: false`, non-zero exit) `data` is `null` and `error.message` describes the problem:
 
 ```json
-{ "ok": false, "command": "generate", "data": null, "error": { "message": "..." } }
+{
+  "ok": false,
+  "command": "generate",
+  "data": null,
+  "error": { "message": "..." }
+}
 ```
 
 The `data` shape is the per-command contract:
 
-| Command    | `data` fields                                                                                                                                              |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `generate` | `types: string[]`, `count: number`, `rewrittenFiles: number`, `collisions: Collision[]`, `entries: { type, keyPath, filePath, modulePath }[]`               |
+| Command    | `data` fields                                                                                                                                                    |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `generate` | `types: string[]`, `count: number`, `rewrittenFiles: number`, `collisions: Collision[]`, `entries: { type, keyPath, filePath, modulePath }[]`                    |
 | `audit`    | `types: string[]`, `manifestMatchesFilesystem: boolean`, `unknownGeneratedUsages: string[]`, `unusedEntries: string[]`, `deletedFiles?: string[]` (with `--fix`) |
-| `organize` | `types: string[]`, `count: number`, `movedFiles: string[]`, `rewrittenFiles: number`, `collisions: Collision[]`                                             |
+| `organize` | `types: string[]`, `count: number`, `movedFiles: string[]`, `rewrittenFiles: number`, `collisions: Collision[]`                                                  |
 
 A `Collision` is `{ type, keyPath, kept, dropped }` and is only populated under `--on-collision first` (in text mode these surface as `Collision:` lines). Note that `audit` reports `ok: false` and exits `1` when the manifest is stale or unknown generated usages are detected; unused entries alone are reported with `ok: true`.
 
@@ -445,13 +450,13 @@ export const Svgs = {
 
 ### Key normalization rules
 
-| Filename                           | `keyCase: 'camel'` (default)         | `keyCase: 'snake'`        |
-| ---------------------------------- | ------------------------------------ | ------------------------- |
-| `harini-cry.png`                   | `hariniCry`                          | `harini_cry`              |
-| `camera_guide.png`                 | `cameraGuide`                        | `camera_guide`            |
-| `Info-Filled.png`                  | `infoFilled`                         | `info_filled`             |
-| `1.png`                            | `n1` (numeric prefix → `n`)          | `n_1`                     |
-| `point.png` alongside `point/` dir | `pointAsset` (leaf/branch collision) | `point_asset`             |
+| Filename                           | `keyCase: 'camel'` (default)         | `keyCase: 'snake'` |
+| ---------------------------------- | ------------------------------------ | ------------------ |
+| `harini-cry.png`                   | `hariniCry`                          | `harini_cry`       |
+| `camera_guide.png`                 | `cameraGuide`                        | `camera_guide`     |
+| `Info-Filled.png`                  | `infoFilled`                         | `info_filled`      |
+| `1.png`                            | `n1` (numeric prefix → `n`)          | `n_1`              |
+| `point.png` alongside `point/` dir | `pointAsset` (leaf/branch collision) | `point_asset`      |
 
 Set the casing via the `keyCase` config option or the `--case <camel\|snake>` CLI flag.
 
