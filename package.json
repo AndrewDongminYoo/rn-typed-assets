@@ -1,6 +1,6 @@
 {
   "name": "rn-typed-assets",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "React Native typed asset registry — generates type-safe Assets/Svgs/Lotties constants, audits unused files, and rewrites stale imports automatically",
   "main": "src/index.js",
   "exports": {
@@ -51,7 +51,7 @@
   "bugs": {
     "url": "https://github.com/AndrewDongminYoo/rn-typed-assets/issues"
   },
-  "homepage": "https://v0-rn-typed-assets-doc.vercel.app/",
+  "homepage": "https://rn-toolkits.donminzzi.kr/rn-typed-assets",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"

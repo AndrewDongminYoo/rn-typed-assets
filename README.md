@@ -1,6 +1,12 @@
 # rn-typed-assets
 
+[![rn-typed-assets turns React Native asset files into a typed registry](https://raw.githubusercontent.com/AndrewDongminYoo/rn-typed-assets/main/docs/assets/readme-hero.png)](https://rn-toolkits.donminzzi.kr/rn-typed-assets)
+
+[![npm version](https://img.shields.io/npm/v/rn-typed-assets?style=flat-square&color=0086aa)](https://www.npmjs.com/package/rn-typed-assets) [![npm downloads](https://img.shields.io/npm/dm/rn-typed-assets?style=flat-square&color=667085)](https://www.npmjs.com/package/rn-typed-assets) [![Node.js](https://img.shields.io/node/v/rn-typed-assets?style=flat-square&color=2f6f44)](package.json) [![license](https://img.shields.io/npm/l/rn-typed-assets?style=flat-square&color=667085)](LICENSE) [![RN Toolkits](https://img.shields.io/badge/docs-RN_Toolkits-c57417?style=flat-square)](https://rn-toolkits.donminzzi.kr/rn-typed-assets)
+
 **Get rid of all string-based asset references in React Native — forever.**
+
+[Documentation](https://rn-toolkits.donminzzi.kr/rn-typed-assets) · [npm](https://www.npmjs.com/package/rn-typed-assets) · [Issues](https://github.com/AndrewDongminYoo/rn-typed-assets/issues)
 
 `rn-typed-assets` scans your asset directories and generates a typed TypeScript registry, so that every image, SVG, and Lottie animation is accessed through a named constant instead of a brittle `require('../../../assets/icon.png')` path. If the file doesn't exist, the import fails at generation time — not at runtime.
 

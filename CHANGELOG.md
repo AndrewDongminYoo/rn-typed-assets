@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1] - 2026-08-20
+
+### Changed
+
+- Replaced long-lived npm automation-token publishing with npm Trusted Publisher authentication through GitHub Actions OIDC. Public releases now receive npm provenance automatically.
+- Refreshed the README with a product hero, package badges, and the canonical React Native Toolkits documentation link.
+
+### Fixed
+
+- Updated transitive dependency overrides to patched `brace-expansion` and `js-yaml` releases.
+
 ## [1.6.0] - 2026-07-05
 
 ### Added
