@@ -445,12 +445,12 @@ export const Assets = {
   },
 } as const;
 
-export const Lotties = {
-  loading: require('../assets/lottie/loading.json') as AnimationObject,
-} as const;
-
 export const Svgs = {
   logo: require('../assets/svg/logo.svg') as SvgsAssetSource,
+} as const;
+
+export const Lotties = {
+  loading: require('../assets/lottie/loading.json') as AnimationObject,
 } as const;
 ```
 
