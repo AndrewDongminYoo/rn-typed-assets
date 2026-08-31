@@ -329,4 +329,35 @@ describe('core', () => {
     ]);
     expect(manifest.types.svg).toEqual([]);
   });
+
+  test('collectAssetEntries treats a missing asset root as contributing no entries', () => {
+    const { projectRoot, writeFile } = makeTempProject();
+
+    writeFile('src/assets/logo.png');
+
+    const entries = collectAssetEntries({
+      projectRoot,
+      types: ['image', 'svg', 'lottie'],
+      config: DEFAULT_CONFIG,
+    });
+
+    expect(entries.map((entry) => `${entry.type}:${entry.keyPath}`)).toEqual([
+      'image:logo',
+    ]);
+  });
+
+  test('collectAssetEntries still reports a file standing where an asset root belongs', () => {
+    const { projectRoot, writeFile } = makeTempProject();
+
+    writeFile('src/assets/logo.png');
+    writeFile('src/assets/svg', 'not a directory');
+
+    expect(() =>
+      collectAssetEntries({
+        projectRoot,
+        types: ['svg'],
+        config: DEFAULT_CONFIG,
+      }),
+    ).toThrow('Asset root not found for type "svg"');
+  });
 });

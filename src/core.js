@@ -285,10 +285,13 @@ const collectAssetEntries = ({ projectRoot, types, config, collisions }) => {
     const typeConfig = config.types[type];
     const absoluteRoot = path.join(projectRoot, typeConfig.rootDir);
 
-    if (
-      !fs.existsSync(absoluteRoot) ||
-      !fs.statSync(absoluteRoot).isDirectory()
-    ) {
+    // An absent root means the project has no assets of this type yet, which is
+    // the normal state before `organize` creates the canonical subdirectories.
+    if (!fs.existsSync(absoluteRoot)) {
+      continue;
+    }
+
+    if (!fs.statSync(absoluteRoot).isDirectory()) {
       throw new Error(
         `Asset root not found for type "${type}": ${typeConfig.rootDir}`,
       );

@@ -209,4 +209,53 @@ describe('cli', () => {
     expect(envelope.data.manifestMatchesFilesystem).toBe(true);
     expect(envelope.data.unusedEntries).toEqual(['image:icons.home']);
   });
+
+  test('organize moves a flat asset directory into canonical subdirectories', () => {
+    const { projectRoot, writeFile } = makeTempProject();
+
+    writeFile('src/assets/logo.png');
+    writeFile('src/assets/icon.svg', '<svg />');
+    writeFile('src/assets/loading.json', '{}');
+
+    const result = runCli(projectRoot, [
+      'organize',
+      'src/assets',
+      '--output',
+      'json',
+    ]);
+
+    expect(result.status).toBe(0);
+
+    const envelope = JSON.parse(result.stdout.trim());
+
+    expect(envelope.ok).toBe(true);
+    expect(envelope.data.movedFiles.sort()).toEqual([
+      'src/assets/icon.svg -> src/assets/svg/icon.svg',
+      'src/assets/loading.json -> src/assets/lottie/loading.json',
+      'src/assets/logo.png -> src/assets/images/logo.png',
+    ]);
+  });
+
+  test('generate succeeds when a configured asset root does not exist', () => {
+    const { projectRoot, writeFile } = makeTempProject();
+
+    writeFile('src/assets/logo.png');
+
+    const result = runCli(projectRoot, ['generate', '--output', 'json']);
+
+    expect(result.status).toBe(0);
+
+    const envelope = JSON.parse(result.stdout.trim());
+
+    expect(envelope.ok).toBe(true);
+    expect(envelope.data.count).toBe(1);
+
+    const generatedModule = fs.readFileSync(
+      path.join(projectRoot, 'src/generated/assets.gen.ts'),
+      'utf8',
+    );
+
+    expect(generatedModule).toContain("logo: require('../assets/logo.png')");
+    expect(generatedModule).toContain('export const Svgs = {} as const;');
+  });
 });

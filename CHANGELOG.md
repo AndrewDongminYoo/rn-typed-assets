@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **A missing asset root no longer fails the run** — `collectAssetEntries` treated an absent `rootDir` as an error, so with the default config every command failed on any project without both `src/assets/svg` and `src/assets/lottie`. That is the normal state of a project adopting the tool, which made `generate` fail on the README's own Quick Start invocation, `audit` fail identically, and `organize` unable to bootstrap the very directories it exists to create. An absent root is now read as "no assets of this type yet" and contributes no entries. A path that exists but is not a directory still raises the original error.
+
 ## [1.6.1] - 2026-08-20
 
 ### Changed
