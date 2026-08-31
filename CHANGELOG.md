@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **A missing asset root no longer fails the run** — `collectAssetEntries` treated an absent `rootDir` as an error, so with the default config every command failed on any project without both `src/assets/svg` and `src/assets/lottie`. That is the normal state of a project adopting the tool, which made `generate` fail on the README's own Quick Start invocation, `audit` fail identically, and `organize` unable to bootstrap the very directories it exists to create. An absent root is now read as "no assets of this type yet" and contributes no entries. Absence is judged from the nearest entry that does exist between the project root and the configured root: if that entry does not resolve to a directory — a plain file, or a symlink whose target is gone, at the root itself or anywhere above it — the original error is raised, so a broken shared-assets link is reported rather than silently emitting an empty registry.
+
+- **Every command rejects a project root that does not exist** — a mistyped `--root` left every configured asset root legitimately absent, so `generate` created the wrong directory, wrote empty generated files and exited `0`. The root named on the command line is now validated once, where all three commands resolve it, and fails with `Project root not found: <path>`.
+
+- **`organize` rejects an assets directory that does not exist** — the required positional argument was never validated, so a typo such as `organize src/asset` moved nothing, regenerated over the existing output and still exited `0`. It now fails with `Assets directory not found: <path>`.
+
 ## [1.6.1] - 2026-08-20
 
 ### Changed

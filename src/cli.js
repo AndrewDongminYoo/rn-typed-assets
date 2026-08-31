@@ -316,12 +316,20 @@ const runOrganize = (argv, projectRoot, config, output) => {
     throw new Error('The organize command requires an assets directory.');
   }
 
+  const assetsAbsoluteDir = path.join(projectRoot, assetsDir);
+
+  // Configured roots may legitimately be absent, but the directory named on the
+  // command line is required: without this a typo would move nothing, regenerate
+  // over the existing output and still exit 0.
+  if (!fs.existsSync(assetsAbsoluteDir)) {
+    throw new Error(`Assets directory not found: ${assetsDir}`);
+  }
+
   const previousManifest = generateAssetsManifest({
     entries: collectAssetEntries({ projectRoot, types, config }),
     types,
     config,
   });
-  const assetsAbsoluteDir = path.join(projectRoot, assetsDir);
   const movedFiles = [];
 
   for (const absoluteFilePath of listFilesRecursively(assetsAbsoluteDir)) {
@@ -435,7 +443,19 @@ const main = () => {
   }
 
   try {
-    const projectRoot = path.resolve(parseRootArg(rest));
+    const rootArg = parseRootArg(rest);
+    const projectRoot = path.resolve(rootArg);
+
+    // Every command resolves its project root here, so validating it once
+    // covers all of them: a mistyped --root would otherwise leave every
+    // configured asset root legitimately absent, and the run would create the
+    // wrong directory, write empty output and exit 0.
+    if (
+      !fs.existsSync(projectRoot) ||
+      !fs.statSync(projectRoot).isDirectory()
+    ) {
+      throw new Error(`Project root not found: ${rootArg}`);
+    }
     const configFilePath = parseConfigArg(rest);
     const config = applyCliOverrides(
       resolveConfig(projectRoot, configFilePath),

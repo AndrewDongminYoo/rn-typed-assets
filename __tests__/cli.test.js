@@ -31,12 +31,6 @@ describe('cli', () => {
 
     writeFile('src/assets/svgs/logo.svg', '<svg />');
     writeFile('src/assets/lotties/loading.json', '{}');
-    fs.mkdirSync(path.join(projectRoot, 'src/assets/svg'), {
-      recursive: true,
-    });
-    fs.mkdirSync(path.join(projectRoot, 'src/assets/lottie'), {
-      recursive: true,
-    });
 
     const result = runCli(projectRoot, [
       'organize',
@@ -68,7 +62,6 @@ describe('cli', () => {
     const { projectRoot, writeFile } = makeTempProject();
 
     writeFile('src/assets/svgs/logo.svg', '<svg />');
-    fs.mkdirSync(path.join(projectRoot, 'src/assets/svg'), { recursive: true });
 
     const result = runCli(projectRoot, [
       'organize',
@@ -208,5 +201,99 @@ describe('cli', () => {
     expect(envelope.command).toBe('audit');
     expect(envelope.data.manifestMatchesFilesystem).toBe(true);
     expect(envelope.data.unusedEntries).toEqual(['image:icons.home']);
+  });
+
+  test('organize moves a flat asset directory into canonical subdirectories', () => {
+    const { projectRoot, writeFile } = makeTempProject();
+
+    writeFile('src/assets/logo.png');
+    writeFile('src/assets/icon.svg', '<svg />');
+    writeFile('src/assets/loading.json', '{}');
+
+    const result = runCli(projectRoot, [
+      'organize',
+      'src/assets',
+      '--output',
+      'json',
+    ]);
+
+    expect(result.status).toBe(0);
+
+    const envelope = JSON.parse(result.stdout.trim());
+
+    expect(envelope.ok).toBe(true);
+    expect(envelope.data.movedFiles.sort()).toEqual([
+      'src/assets/icon.svg -> src/assets/svg/icon.svg',
+      'src/assets/loading.json -> src/assets/lottie/loading.json',
+      'src/assets/logo.png -> src/assets/images/logo.png',
+    ]);
+  });
+
+  test('generate succeeds when a configured asset root does not exist', () => {
+    const { projectRoot, writeFile } = makeTempProject();
+
+    writeFile('src/assets/logo.png');
+
+    const result = runCli(projectRoot, ['generate', '--output', 'json']);
+
+    expect(result.status).toBe(0);
+
+    const envelope = JSON.parse(result.stdout.trim());
+
+    expect(envelope.ok).toBe(true);
+    expect(envelope.data.count).toBe(1);
+
+    const generatedModule = fs.readFileSync(
+      path.join(projectRoot, 'src/generated/assets.gen.ts'),
+      'utf8',
+    );
+
+    expect(generatedModule).toContain("logo: require('../assets/logo.png')");
+    expect(generatedModule).toContain('export const Svgs = {} as const;');
+  });
+
+  test('organize reports a missing assets directory instead of exiting successfully', () => {
+    const { projectRoot, writeFile } = makeTempProject();
+
+    writeFile('src/assets/logo.png');
+
+    const result = runCli(projectRoot, [
+      'organize',
+      'src/asset',
+      '--output',
+      'json',
+    ]);
+
+    expect(result.status).toBe(1);
+
+    const envelope = JSON.parse(result.stdout.trim());
+
+    expect(envelope.ok).toBe(false);
+    expect(envelope.error.message).toBe(
+      'Assets directory not found: src/asset',
+    );
+  });
+
+  test('generate reports a project root that does not exist', () => {
+    const { projectRoot } = makeTempProject();
+    const missingRoot = path.join(projectRoot, 'no-such-project');
+
+    const result = runCli(projectRoot, [
+      'generate',
+      '--root',
+      missingRoot,
+      '--output',
+      'json',
+    ]);
+
+    expect(result.status).toBe(1);
+
+    const envelope = JSON.parse(result.stdout.trim());
+
+    expect(envelope.ok).toBe(false);
+    expect(envelope.error.message).toBe(
+      `Project root not found: ${missingRoot}`,
+    );
+    expect(fs.existsSync(missingRoot)).toBe(false);
   });
 });
