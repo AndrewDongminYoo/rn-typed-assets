@@ -285,13 +285,20 @@ const collectAssetEntries = ({ projectRoot, types, config, collisions }) => {
     const typeConfig = config.types[type];
     const absoluteRoot = path.join(projectRoot, typeConfig.rootDir);
 
-    // An absent root means the project has no assets of this type yet, which is
-    // the normal state before `organize` creates the canonical subdirectories.
-    if (!fs.existsSync(absoluteRoot)) {
+    // lstat does not follow symlinks, so no entry here means the project simply
+    // has no assets of this type yet — the normal state before `organize`
+    // creates the canonical subdirectories.
+    if (!fs.lstatSync(absoluteRoot, { throwIfNoEntry: false })) {
       continue;
     }
 
-    if (!fs.statSync(absoluteRoot).isDirectory()) {
+    // An entry that exists but does not resolve to a directory is a
+    // misconfigured root, not an empty one: a plain file, or a dangling symlink
+    // whose target is gone.
+    if (
+      !fs.existsSync(absoluteRoot) ||
+      !fs.statSync(absoluteRoot).isDirectory()
+    ) {
       throw new Error(
         `Asset root not found for type "${type}": ${typeConfig.rootDir}`,
       );

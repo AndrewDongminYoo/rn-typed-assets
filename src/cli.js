@@ -316,12 +316,20 @@ const runOrganize = (argv, projectRoot, config, output) => {
     throw new Error('The organize command requires an assets directory.');
   }
 
+  const assetsAbsoluteDir = path.join(projectRoot, assetsDir);
+
+  // Configured roots may legitimately be absent, but the directory named on the
+  // command line is required: without this a typo would move nothing, regenerate
+  // over the existing output and still exit 0.
+  if (!fs.existsSync(assetsAbsoluteDir)) {
+    throw new Error(`Assets directory not found: ${assetsDir}`);
+  }
+
   const previousManifest = generateAssetsManifest({
     entries: collectAssetEntries({ projectRoot, types, config }),
     types,
     config,
   });
-  const assetsAbsoluteDir = path.join(projectRoot, assetsDir);
   const movedFiles = [];
 
   for (const absoluteFilePath of listFilesRecursively(assetsAbsoluteDir)) {

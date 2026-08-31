@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **A missing asset root no longer fails the run** — `collectAssetEntries` treated an absent `rootDir` as an error, so with the default config every command failed on any project without both `src/assets/svg` and `src/assets/lottie`. That is the normal state of a project adopting the tool, which made `generate` fail on the README's own Quick Start invocation, `audit` fail identically, and `organize` unable to bootstrap the very directories it exists to create. An absent root is now read as "no assets of this type yet" and contributes no entries. A path that exists but is not a directory still raises the original error.
+- **A missing asset root no longer fails the run** — `collectAssetEntries` treated an absent `rootDir` as an error, so with the default config every command failed on any project without both `src/assets/svg` and `src/assets/lottie`. That is the normal state of a project adopting the tool, which made `generate` fail on the README's own Quick Start invocation, `audit` fail identically, and `organize` unable to bootstrap the very directories it exists to create. An absent root is now read as "no assets of this type yet" and contributes no entries. A filesystem entry that exists but does not resolve to a directory — a plain file, or a dangling symlink whose target is gone — still raises the original error, so a broken shared-assets link is reported rather than silently emitting an empty registry.
+
+- **`organize` rejects an assets directory that does not exist** — the required positional argument was never validated, so a typo such as `organize src/asset` moved nothing, regenerated over the existing output and still exited `0`. It now fails with `Assets directory not found: <path>`.
 
 ## [1.6.1] - 2026-08-20
 

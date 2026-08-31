@@ -31,12 +31,6 @@ describe('cli', () => {
 
     writeFile('src/assets/svgs/logo.svg', '<svg />');
     writeFile('src/assets/lotties/loading.json', '{}');
-    fs.mkdirSync(path.join(projectRoot, 'src/assets/svg'), {
-      recursive: true,
-    });
-    fs.mkdirSync(path.join(projectRoot, 'src/assets/lottie'), {
-      recursive: true,
-    });
 
     const result = runCli(projectRoot, [
       'organize',
@@ -68,7 +62,6 @@ describe('cli', () => {
     const { projectRoot, writeFile } = makeTempProject();
 
     writeFile('src/assets/svgs/logo.svg', '<svg />');
-    fs.mkdirSync(path.join(projectRoot, 'src/assets/svg'), { recursive: true });
 
     const result = runCli(projectRoot, [
       'organize',
@@ -257,5 +250,27 @@ describe('cli', () => {
 
     expect(generatedModule).toContain("logo: require('../assets/logo.png')");
     expect(generatedModule).toContain('export const Svgs = {} as const;');
+  });
+
+  test('organize reports a missing assets directory instead of exiting successfully', () => {
+    const { projectRoot, writeFile } = makeTempProject();
+
+    writeFile('src/assets/logo.png');
+
+    const result = runCli(projectRoot, [
+      'organize',
+      'src/asset',
+      '--output',
+      'json',
+    ]);
+
+    expect(result.status).toBe(1);
+
+    const envelope = JSON.parse(result.stdout.trim());
+
+    expect(envelope.ok).toBe(false);
+    expect(envelope.error.message).toBe(
+      'Assets directory not found: src/asset',
+    );
   });
 });
