@@ -443,7 +443,19 @@ const main = () => {
   }
 
   try {
-    const projectRoot = path.resolve(parseRootArg(rest));
+    const rootArg = parseRootArg(rest);
+    const projectRoot = path.resolve(rootArg);
+
+    // Every command resolves its project root here, so validating it once
+    // covers all of them: a mistyped --root would otherwise leave every
+    // configured asset root legitimately absent, and the run would create the
+    // wrong directory, write empty output and exit 0.
+    if (
+      !fs.existsSync(projectRoot) ||
+      !fs.statSync(projectRoot).isDirectory()
+    ) {
+      throw new Error(`Project root not found: ${rootArg}`);
+    }
     const configFilePath = parseConfigArg(rest);
     const config = applyCliOverrides(
       resolveConfig(projectRoot, configFilePath),

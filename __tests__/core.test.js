@@ -378,4 +378,22 @@ describe('core', () => {
       }),
     ).toThrow('Asset root not found for type "svg"');
   });
+
+  test('collectAssetEntries reports a dangling symlink above an asset root', () => {
+    const { projectRoot } = makeTempProject();
+
+    fs.mkdirSync(path.join(projectRoot, 'src'), { recursive: true });
+    fs.symlinkSync(
+      path.join(projectRoot, 'nowhere'),
+      path.join(projectRoot, 'src/assets'),
+    );
+
+    expect(() =>
+      collectAssetEntries({
+        projectRoot,
+        types: ['svg'],
+        config: DEFAULT_CONFIG,
+      }),
+    ).toThrow('Asset root not found for type "svg"');
+  });
 });

@@ -276,6 +276,23 @@ const buildRegistryTree = (entries, options = {}) => {
   return root;
 };
 
+// Walks up from `target` until something exists, stopping at `stopAt`. lstat is
+// used deliberately: it does not follow symlinks, so a dangling link counts as
+// an entry that exists rather than as an absent path.
+const nearestExistingEntry = (target, stopAt) => {
+  let current = target;
+
+  while (current !== stopAt && current !== path.dirname(current)) {
+    if (fs.lstatSync(current, { throwIfNoEntry: false })) {
+      return current;
+    }
+
+    current = path.dirname(current);
+  }
+
+  return stopAt;
+};
+
 const collectAssetEntries = ({ projectRoot, types, config, collisions }) => {
   const selectedTypes = parseTypesArg(types, config);
   const entries = [];
@@ -285,23 +302,27 @@ const collectAssetEntries = ({ projectRoot, types, config, collisions }) => {
     const typeConfig = config.types[type];
     const absoluteRoot = path.join(projectRoot, typeConfig.rootDir);
 
-    // lstat does not follow symlinks, so no entry here means the project simply
-    // has no assets of this type yet — the normal state before `organize`
-    // creates the canonical subdirectories.
-    if (!fs.lstatSync(absoluteRoot, { throwIfNoEntry: false })) {
-      continue;
-    }
+    const nearestExisting = nearestExistingEntry(absoluteRoot, projectRoot);
 
-    // An entry that exists but does not resolve to a directory is a
-    // misconfigured root, not an empty one: a plain file, or a dangling symlink
-    // whose target is gone.
+    // Whatever exists nearest the configured root has to resolve to a
+    // directory. A plain file, or a symlink whose target is gone, is a
+    // misconfigured root rather than an empty one — and checking the nearest
+    // existing entry rather than the root itself catches a break anywhere
+    // between the project root and the leaf.
     if (
-      !fs.existsSync(absoluteRoot) ||
-      !fs.statSync(absoluteRoot).isDirectory()
+      !fs.existsSync(nearestExisting) ||
+      !fs.statSync(nearestExisting).isDirectory()
     ) {
       throw new Error(
         `Asset root not found for type "${type}": ${typeConfig.rootDir}`,
       );
+    }
+
+    // Nothing at the root itself, on an otherwise sound path: the project has
+    // no assets of this type yet, which is the normal state before `organize`
+    // creates the canonical subdirectories.
+    if (nearestExisting !== absoluteRoot) {
+      continue;
     }
 
     const files = listFilesRecursively(absoluteRoot);

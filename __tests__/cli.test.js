@@ -273,4 +273,27 @@ describe('cli', () => {
       'Assets directory not found: src/asset',
     );
   });
+
+  test('generate reports a project root that does not exist', () => {
+    const { projectRoot } = makeTempProject();
+    const missingRoot = path.join(projectRoot, 'no-such-project');
+
+    const result = runCli(projectRoot, [
+      'generate',
+      '--root',
+      missingRoot,
+      '--output',
+      'json',
+    ]);
+
+    expect(result.status).toBe(1);
+
+    const envelope = JSON.parse(result.stdout.trim());
+
+    expect(envelope.ok).toBe(false);
+    expect(envelope.error.message).toBe(
+      `Project root not found: ${missingRoot}`,
+    );
+    expect(fs.existsSync(missingRoot)).toBe(false);
+  });
 });
