@@ -293,7 +293,12 @@ const nearestExistingEntry = (target, stopAt) => {
   return stopAt;
 };
 
-const collectAssetEntries = ({ projectRoot, types, config, collisions }) => {
+const collectAssetEntries = ({
+  projectRoot,
+  types,
+  config,
+  collisions = null,
+}) => {
   const selectedTypes = parseTypesArg(types, config);
   const entries = [];
   const outputAbsDir = path.join(projectRoot, config.outputDir);

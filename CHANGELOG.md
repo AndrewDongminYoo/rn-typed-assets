@@ -150,3 +150,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Three built-in asset types: `image`, `svg`, `lottie`.
 - Deterministic, sorted output stable across runs.
 - Collision detection for files that normalize to the same key.
+
+[Unreleased]: https://github.com/AndrewDongminYoo/rn-typed-assets/compare/v1.6.1...HEAD
+[1.6.1]: https://github.com/AndrewDongminYoo/rn-typed-assets/compare/v1.6.0...v1.6.1
+[1.6.0]: https://github.com/AndrewDongminYoo/rn-typed-assets/compare/v1.5.0...v1.6.0
+[1.5.0]: https://github.com/AndrewDongminYoo/rn-typed-assets/compare/v1.4.0...v1.5.0
+[1.4.0]: https://github.com/AndrewDongminYoo/rn-typed-assets/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/AndrewDongminYoo/rn-typed-assets/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/AndrewDongminYoo/rn-typed-assets/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/AndrewDongminYoo/rn-typed-assets/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/AndrewDongminYoo/rn-typed-assets/releases/tag/v1.0.0

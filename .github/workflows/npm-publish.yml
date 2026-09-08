@@ -24,6 +24,8 @@ jobs:
         run: |
           package_version=$(node -p "require('./package.json').version")
           test "v${package_version}" = "${GITHUB_REF_NAME}"
+      - run: npm run lint
+      - run: npm run typecheck
       - run: npm test
 
   publish-npm:

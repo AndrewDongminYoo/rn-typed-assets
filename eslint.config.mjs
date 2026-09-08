@@ -8,13 +8,12 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
-  js.configs.recommended,
   prettier,
   {
     files: ['**/*.{js,mjs,cjs}'],
     plugins: { js },
     languageOptions: { globals: globals.node },
-    extends: [tseslint.configs.disableTypeChecked],
+    extends: [js.configs.recommended, tseslint.configs.disableTypeChecked],
   },
   {
     files: ['**/*.{ts,mts,cts}'],
