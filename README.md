@@ -203,16 +203,16 @@ rn-typed-assets generate --on-collision first    # keep first path, drop duplica
 
 Scan asset directories and emit `assets.gen.ts` + `assets.manifest.json`.
 
-| Flag              | Description                                                  | Default                       |
-| ----------------- | ------------------------------------------------------------ | ----------------------------- |
-| `--types <types>` | Comma-separated list of asset types to include               | `image,svg,lottie`            |
-| `--inplace`       | Rewrite source files to replace stale references after regen | `false`                       |
-| `--root <path>`   | Project root directory                                       | `cwd`                         |
-| `--config <path>` | Path to config file                                          | `./rn-typed-assets.config.js` |
+| Flag              | Description                                                         | Default                       |
+| ----------------- | ------------------------------------------------------------------- | ----------------------------- |
+| `--types <types>` | Comma-separated list of asset types to include                      | `image,svg,lottie`            |
+| `--inplace`       | Rewrite source files to replace stale references after regeneration | `false`                       |
+| `--root <path>`   | Project root directory                                              | `cwd`                         |
+| `--config <path>` | Path to config file                                                 | `./rn-typed-assets.config.js` |
 
 ```bash
 rn-typed-assets generate
-rn-typed-assets generate --inplace          # rewrite sources after regen
+rn-typed-assets generate --inplace          # rewrite sources after regeneration
 rn-typed-assets generate --types=image,lottie
 rn-typed-assets generate --root=/path/to/project
 ```

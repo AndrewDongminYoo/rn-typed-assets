@@ -1,0 +1,28 @@
+version: '0.2'
+$schema: https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json
+import:
+  - ./.trunk/plugins/quality-configs/cspell.config.yaml
+useGitignore: true
+enableGlobDot: true
+ignorePaths:
+  - .git
+dictionaries:
+  - node
+  - npm
+  - typescript
+words:
+  - codemod
+  - codegen
+  - coupang
+  - dirents
+  - fluttergen
+  - harini
+  - humanfs
+  - inplace
+  - lotties
+  - softprops
+  - stringly
+  - subdirs
+  - swiftgen
+  - TOCTOU
+  - Toolkits
