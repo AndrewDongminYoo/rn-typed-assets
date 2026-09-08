@@ -58,6 +58,69 @@ describe('cli', () => {
     );
   });
 
+  test('organize rewrites a require for an asset moved from a legacy root', () => {
+    const { projectRoot, writeFile } = makeTempProject();
+
+    writeFile('src/assets/svgs/logo.svg', '<svg />');
+    writeFile('src/assets/svg/.keep');
+    writeFile(
+      'src/App.tsx',
+      "const logo = require('./assets/svgs/logo.svg');\n",
+    );
+
+    const result = runCli(projectRoot, [
+      'organize',
+      'src/assets',
+      '--types=svg',
+      '--output=json',
+    ]);
+
+    expect(result.status).toBe(0);
+
+    const envelope = JSON.parse(result.stdout.trim());
+    const appSource = fs.readFileSync(
+      path.join(projectRoot, 'src/App.tsx'),
+      'utf8',
+    );
+
+    expect(envelope.data.rewrittenFiles).toBe(1);
+    expect(appSource).toBe(
+      "import { Svgs } from './generated/assets.gen';\n" +
+        'const logo = Svgs.logo;\n',
+    );
+  });
+
+  test('organize rewrites an import for an asset moved from a flat root', () => {
+    const { projectRoot, writeFile } = makeTempProject();
+
+    writeFile('src/assets/icon.svg', '<svg />');
+    writeFile(
+      'src/App.tsx',
+      "import icon from './assets/icon.svg';\nconst logo = icon;\n",
+    );
+
+    const result = runCli(projectRoot, [
+      'organize',
+      'src/assets',
+      '--types=svg',
+      '--output=json',
+    ]);
+
+    expect(result.status).toBe(0);
+
+    const envelope = JSON.parse(result.stdout.trim());
+    const appSource = fs.readFileSync(
+      path.join(projectRoot, 'src/App.tsx'),
+      'utf8',
+    );
+
+    expect(envelope.data.rewrittenFiles).toBe(1);
+    expect(appSource).toBe(
+      "import { Svgs } from './generated/assets.gen';\n" +
+        'const logo = Svgs.icon;\n',
+    );
+  });
+
   test('organize resolves the assets directory placed after a value-taking flag', () => {
     const { projectRoot, writeFile } = makeTempProject();
 

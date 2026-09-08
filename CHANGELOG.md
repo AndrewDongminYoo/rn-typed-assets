@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`organize` rejects an assets directory that does not exist** — the required positional argument was never validated, so a typo such as `organize src/asset` moved nothing, regenerated over the existing output and still exited `0`. It now fails with `Assets directory not found: <path>`.
 
+- **`organize` rewrites references to every moved asset** — assets outside their configured `rootDir` were absent from the pre-move manifest, so `require()` calls and ES module imports kept their old paths after the files moved. The command now maps each old path to its generated entry before it rewrites project sources.
+
 ## [1.6.1] - 2026-08-20
 
 ### Changed

@@ -325,12 +325,9 @@ const runOrganize = (argv, projectRoot, config, output) => {
     throw new Error(`Assets directory not found: ${assetsDir}`);
   }
 
-  const previousManifest = generateAssetsManifest({
-    entries: collectAssetEntries({ projectRoot, types, config }),
-    types,
-    config,
-  });
+  const previousEntries = collectAssetEntries({ projectRoot, types, config });
   const movedFiles = [];
+  const movedEntryPaths = [];
 
   for (const absoluteFilePath of listFilesRecursively(assetsAbsoluteDir)) {
     const type = detectAssetType(absoluteFilePath, config);
@@ -371,16 +368,44 @@ const runOrganize = (argv, projectRoot, config, output) => {
 
     fs.mkdirSync(path.dirname(destinationPath), { recursive: true });
     fs.renameSync(absoluteFilePath, destinationPath);
-    movedFiles.push(
-      `${path.relative(projectRoot, absoluteFilePath).split(path.sep).join('/')} -> ${path
-        .relative(projectRoot, destinationPath)
-        .split(path.sep)
-        .join('/')}`,
-    );
+    const previousFilePath = path
+      .relative(projectRoot, absoluteFilePath)
+      .split(path.sep)
+      .join('/');
+    const nextFilePath = path
+      .relative(projectRoot, destinationPath)
+      .split(path.sep)
+      .join('/');
+
+    movedFiles.push(`${previousFilePath} -> ${nextFilePath}`);
+    movedEntryPaths.push({ type, previousFilePath, nextFilePath });
   }
 
   const { entries, manifest, collisions } = writeGeneratedAssets({
     projectRoot,
+    types,
+    config,
+  });
+  const previousEntryKeys = new Set(
+    previousEntries.map((entry) => `${entry.type}:${entry.filePath}`),
+  );
+
+  for (const { type, previousFilePath, nextFilePath } of movedEntryPaths) {
+    if (previousEntryKeys.has(`${type}:${previousFilePath}`)) {
+      continue;
+    }
+
+    const nextEntry = entries.find(
+      (entry) => entry.type === type && entry.filePath === nextFilePath,
+    );
+
+    if (nextEntry) {
+      previousEntries.push({ ...nextEntry, filePath: previousFilePath });
+    }
+  }
+
+  const previousManifest = generateAssetsManifest({
+    entries: previousEntries,
     types,
     config,
   });
