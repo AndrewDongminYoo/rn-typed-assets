@@ -5,6 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
+npm run lint                      # Lint source, tests, configuration, and project Markdown
+npm run typecheck                 # Type-check JavaScript source without emitting files
 npm test                          # Run all Jest tests
 npx jest __tests__/core.test.js   # Run a single test file
 node src/cli.js --help            # CLI usage for every subcommand
@@ -13,7 +15,8 @@ node src/cli.js audit             # Compare manifest vs. source usage
 node src/cli.js organize <dir>    # Move assets to canonical directory layout
 ```
 
-The `assets:generate` / `assets:audit` / `assets:organize` npm scripts documented in the README belong to _consuming_ projects; this repository defines only `test`.
+The `assets:generate` / `assets:audit` / `assets:organize` npm scripts documented in the README belong to _consuming_ projects.
+This repository defines `lint`, `typecheck`, and `test` for validation.
 
 No build step — the project is plain JavaScript source in `src/`.
 
