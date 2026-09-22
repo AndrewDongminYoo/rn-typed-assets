@@ -24,6 +24,9 @@ lint:
     - dotenv-linter
     - oxipng
     - svgo
+    - ktlint
+    - shellcheck
+    - shfmt
   enabled:
     - actionlint@1.7.8
     - grype@0.110.0
