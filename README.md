@@ -8,7 +8,8 @@
 
 [Documentation](https://rn-toolkits.donminzzi.kr/rn-typed-assets) · [npm](https://www.npmjs.com/package/rn-typed-assets) · [Issues](https://github.com/AndrewDongminYoo/rn-typed-assets/issues)
 
-`rn-typed-assets` scans your asset directories and generates a typed TypeScript registry, so that every image, SVG, and Lottie animation is accessed through a named constant instead of a brittle `require('../../../assets/icon.png')` path. If the file doesn't exist, the import fails at generation time — not at runtime.
+`rn-typed-assets` scans your asset directories and generates a typed TypeScript registry, so that every image, SVG, and Lottie animation is accessed through a named constant instead of a brittle `require('../../../assets/icon.png')` path.
+The registry contains the files discovered by the scan; TypeScript checks references to keys absent from that registry.
 
 ```ts
 // Before
@@ -44,7 +45,7 @@ This tool is directly inspired by two codegen tools from other ecosystems:
 - **Asset organization** — `organize` migrates flat or legacy asset directories into canonical subdirectories (`images/`, `svg/`, `lottie/`) in one command
 - **Configurable** — override paths, export names, TypeScript type imports, or add entirely new asset types via `rn-typed-assets.config.js`
 - **Programmatic API** — every function is exported; integrate the generator into your own scripts or build tools
-- **Lightweight** — zero runtime dependencies; `typescript` is a peer dependency used only by the audit command
+- **Lightweight** — zero runtime dependencies; the optional `typescript` peer is loaded by audit and source rewriting
 
 ## How It Works
 
@@ -90,7 +91,9 @@ src/**/*.{ts,tsx,js,jsx} ──────►  compare usages in source
 npm install --save-dev rn-typed-assets
 ```
 
-`typescript` must be available in the project (it is a `peerDependency`). Most React Native projects already have it as a dev dependency.
+Install `typescript` for audit and source rewriting (`generate --inplace` and `organize`).
+Plain generation does not require the optional peer.
+The development checks use TypeScript 6.0.3; TypeScript 7 does not expose the classic Compiler API required by these operations.
 
 ## Quick Start
 

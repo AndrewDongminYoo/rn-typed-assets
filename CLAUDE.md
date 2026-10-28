@@ -49,7 +49,8 @@ No build step — the project is plain JavaScript source in `src/`.
 
 - **Content hashing for moves** — `codemod.js` uses SHA-1 to track renamed/moved files so references stay valid even when paths change.
 - **Collision detection** — `core.js` appends an `Asset` / `_asset` suffix (following `keyCase`) when a flat key conflicts with a directory name (e.g., `point.png` + `point/` → `pointAsset`).
-- **TypeScript as optional peer dep** — `ts-util.js` lazy-loads `typescript`; the `audit` and `codemod` commands require it but `generate` and `organize` do not.
+- **TypeScript as optional peer dep** — `ts-util.js` lazy-loads `typescript`; audit and source rewriting require it, including `generate --inplace` and source rewriting during `organize`.
+  Plain generation does not require it.
 - **Deterministic output** — all entries are sorted before emission so diffs are minimal and reproducible across runs.
 - **No runtime dependencies** — zero `dependencies` in `package.json`; all packages are `devDependencies` or `peerDependencies`.
 
@@ -73,4 +74,8 @@ Config is loaded in `config.js` via `loadConfig()` and deep-merged with defaults
 
 ## Testing
 
-Tests are in `__tests__/` and use Jest 29 with Node environment. Each suite is named `<module>.test.js` and targets that one `src/` module; `src/index.js` (pure re-exports) and `src/ts-util.js` (exercised through `audit` and `codemod`) have no dedicated suite. Tests make real filesystem calls against fixtures rather than heavy mocking.
+Tests are in `__tests__/` and use Jest 30 with Node environment.
+Each suite is named `<module>.test.js` and targets that one `src/` module; `src/index.js` (pure re-exports) and `src/ts-util.js` (exercised through `audit` and `codemod`) have no dedicated suite.
+Tests make real filesystem calls against temporary fixtures rather than heavy mocking.
+The development gates use TypeScript 6.0.3; TypeScript 7 does not expose the classic Compiler API consumed by `ts-util.js` and is outside `typescript-eslint` 8.72.1's supported peer range.
+The optional public TypeScript peer floor remains `>=4.9.0`; the maintenance checks do not test that minimum version.
