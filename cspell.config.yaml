@@ -16,10 +16,14 @@ words:
   - coupang
   - dirents
   - fluttergen
+  - GHSA-gcqx-w48m-w2h4
   - harini
   - humanfs
+  - IgnoredVulns
   - inplace
+  - katex
   - lotties
+  - SARIF
   - softprops
   - stringly
   - subdirs
