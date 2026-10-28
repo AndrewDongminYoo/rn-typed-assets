@@ -8,6 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run lint                      # Lint source, tests, configuration, and project Markdown
 npm run typecheck                 # Type-check JavaScript source without emitting files
 npm test                          # Run all Jest tests
+python3 -m unittest discover -s .trunk/configs/tests -p 'test_*.py' # Test the TruffleHog reader
 npx jest __tests__/core.test.js   # Run a single test file
 node src/cli.js --help            # CLI usage for every subcommand
 node src/cli.js generate          # Scan assets, emit assets.gen.ts + assets.manifest.json
@@ -79,3 +80,7 @@ Each suite is named `<module>.test.js` and targets that one `src/` module; `src/
 Tests make real filesystem calls against temporary fixtures rather than heavy mocking.
 The development gates use TypeScript 6.0.3; TypeScript 7 does not expose the classic Compiler API consumed by `ts-util.js` and is outside `typescript-eslint` 8.72.1's supported peer range.
 The optional public TypeScript peer floor remains `>=4.9.0`; the maintenance checks do not test that minimum version.
+
+The offline TruffleHog filesystem gate uses `.trunk/configs/trufflehog_to_sarif.py` to retain decoded findings when their raw value is absent from the original file.
+The reader emits file-level locations when a literal position is unavailable, keeps detector rule IDs for ignore directives, and never includes secret values in messages.
+Malformed JSONL or unsupported source metadata fails conversion instead of returning an empty clean result.

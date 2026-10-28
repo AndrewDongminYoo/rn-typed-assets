@@ -46,6 +46,11 @@ lint:
       commands:
         - name: lint
           run: trufflehog filesystem --json --fail --no-verification --no-update ${target}
+          direct_configs:
+            - .trunk/configs/trufflehog_to_sarif.py
+          parser:
+            runtime: python
+            run: python3 .trunk/configs/trufflehog_to_sarif.py
   ignore:
     - linters: [cspell, shellcheck, shfmt]
       paths:

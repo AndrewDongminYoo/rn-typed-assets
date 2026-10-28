@@ -27,3 +27,4 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      - run: python3 -m unittest discover -s .trunk/configs/tests -p 'test_*.py'
