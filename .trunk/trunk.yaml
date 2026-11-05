@@ -2,12 +2,12 @@
 # To learn more about the format of this file, see https://docs.trunk.io/reference/trunk-yaml
 version: 0.1
 cli:
-  version: 1.25.0
+  version: 1.29.0
 # Trunk provides extensibility via plugins. (https://docs.trunk.io/plugins)
 plugins:
   sources:
     - id: quality-configs
-      ref: v0.5.0
+      ref: v0.13.0
       uri: https://github.com/AndrewDongminYoo/quality-configs
     - id: trunk
       ref: v1.11.0
@@ -20,28 +20,11 @@ runtimes:
     - python@3.14.4
 # This is the section where you manage your linters. (https://docs.trunk.io/check/configuration)
 lint:
-  disabled:
-    - dotenv-linter
-    - ktlint
-    - oxipng
-    - shellcheck
-    - shfmt
-    - svgo
-  enabled:
-    - actionlint@1.7.12
-    - checkov@3.3.30
-    - cspell@10.4.0
-    - eslint@10.13.0
-    - git-diff-check
-    - grype@0.121.0
-    - markdownlint@0.50.0
-    - osv-scanner@2.7.0
-    - pinact@4.1.1!:
-        commands: [lint, upgrade]
-    - prettier@3.9.10
-    - trufflehog@3.99.7
-    - yamllint@1.38.0
   definitions:
+    - name: pinact
+      commands:
+        - name: upgrade
+          enabled: true
     - name: trufflehog
       commands:
         - name: lint
@@ -51,6 +34,26 @@ lint:
           parser:
             runtime: python
             run: python3 .trunk/configs/trufflehog_to_sarif.py
+  disabled:
+    - dotenv-linter
+    - grype
+    - ktlint
+    - oxipng
+    - shellcheck
+    - shfmt
+    - svgo
+  enabled:
+    - actionlint@1.7.12
+    - checkov@3.4.3
+    - cspell@10.4.0
+    - eslint@10.14.0
+    - git-diff-check
+    - markdownlint@0.50.0
+    - osv-scanner@2.7.0
+    - pinact@4.1.1!
+    - prettier@3.9.10
+    - trufflehog@3.99.8
+    - yamllint@1.38.0
   ignore:
     - linters: [cspell, shellcheck, shfmt]
       paths:
