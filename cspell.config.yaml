@@ -11,11 +11,15 @@ dictionaries:
   - npm
   - typescript
 words:
+  - anymatch
   - codemod
   - codegen
   - coupang
   - dirents
+  - extglob
+  - fdir
   - fluttergen
+  - GHSA-fc5q-39xc-vjpf
   - GHSA-gcqx-w48m-w2h4
   - harini
   - humanfs
