@@ -2,10 +2,6 @@ version: '0.2'
 $schema: https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json
 import:
   - ./.trunk/plugins/quality-configs/cspell.config.yaml
-useGitignore: true
-enableGlobDot: true
-ignorePaths:
-  - .git
 dictionaries:
   - node
   - npm
@@ -20,14 +16,10 @@ words:
   - fdir
   - fluttergen
   - GHSA-fc5q-39xc-vjpf
-  - GHSA-gcqx-w48m-w2h4
   - harini
-  - humanfs
-  - IgnoredVulns
   - inplace
   - katex
   - lotties
-  - SARIF
   - softprops
   - stringly
   - subdirs
